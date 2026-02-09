@@ -346,3 +346,23 @@ section input[type="radio"] {
 .meja br {
   display: block;
 }
+
+/* =====================
+   MEJA RAMPING VERTIKAL
+===================== */
+.meja.slim-vert {
+  width: 70%;
+  margin: 0 auto;      /* biar ketengah di kolom */
+  padding: 10px 4px;
+  font-size: 12px;
+}
+
+/* tinggi khusus */
+.meja.slim-vert:not(.tall) {
+  height: 64px;        /* meja 6 & 8 (5 org) */
+}
+
+.meja.slim-vert.tall {
+  height: 130px;       /* meja 5 & 7 (10 org) */
+  font-size: 13px;
+}
