@@ -316,3 +316,33 @@ section input[type="radio"] {
   border: none;
   border-radius: 10px;
 }
+
+/* =====================
+   RUANGAN 2 – GRID KHUSUS
+===================== */
+.grid-r2 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+/* ukuran meja */
+.meja.small {
+  height: 56px;
+  font-size: 12px;
+}
+
+.meja.wide {
+  height: 56px;
+  font-size: 12px;
+}
+
+.meja.tall {
+  height: 110px;
+  font-size: 13px;
+}
+
+/* rapikan teks */
+.meja br {
+  display: block;
+}
