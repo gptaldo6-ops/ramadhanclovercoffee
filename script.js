@@ -15,67 +15,27 @@ function updateSummary() {
   let hasData = false;
 
   document.querySelectorAll(".paket-card").forEach((card) => {
-    const paket = card.dataset.paket;
+    const paketName = card.querySelector("strong").textContent;
     const qty = Number(card.querySelector(".paket-qty").textContent);
     if (qty <= 0) return;
 
     hasData = true;
-    html += `<strong>Paket ${paket} × ${qty}</strong><br/>`;
-
-    card.querySelectorAll(".variant").forEach((variant) => {
-      const variantQty = Number(variant.querySelector(".variant-qty").textContent);
-      if (variantQty > 0) {
-        html += `${variant.dataset.variant} × ${variantQty}<br/>`;
-      }
-    });
-
-    html += "<hr/>";
+    html += `<strong>${paketName} × ${qty}</strong><br/>`;
   });
 
   summaryContainer.innerHTML = hasData ? html : "<p>Belum ada paket dipilih</p>";
 }
 
 document.querySelectorAll(".paket-card").forEach((card) => {
-  const capacity = Number(card.dataset.capacity);
   const qtyEl = card.querySelector(".paket-qty");
   const plus = card.querySelector(".paket-plus");
   const minus = card.querySelector(".paket-minus");
-  const variants = card.querySelectorAll(".variant");
 
   let paketQty = 0;
-
-  function totalVariant() {
-    let total = 0;
-    variants.forEach((variant) => {
-      total += Number(variant.querySelector(".variant-qty").textContent);
-    });
-    return total;
-  }
-
-  function refreshVariantUI() {
-    const max = paketQty * capacity;
-
-    variants.forEach((variant) => {
-      const variantPlus = variant.querySelector(".variant-plus");
-      const variantMinus = variant.querySelector(".variant-minus");
-
-      if (paketQty === 0) {
-        variant.classList.remove("active", "selected");
-        variantPlus.disabled = true;
-        variantMinus.disabled = true;
-        return;
-      }
-
-      variant.classList.add("active");
-      variantMinus.disabled = false;
-      variantPlus.disabled = totalVariant() >= max;
-    });
-  }
 
   plus.addEventListener("click", () => {
     paketQty += 1;
     qtyEl.textContent = paketQty;
-    refreshVariantUI();
     updateSummary();
   });
 
@@ -85,46 +45,8 @@ document.querySelectorAll(".paket-card").forEach((card) => {
     }
 
     qtyEl.textContent = paketQty;
-
-    if (paketQty === 0) {
-      variants.forEach((variant) => {
-        variant.querySelector(".variant-qty").textContent = "0";
-      });
-    }
-
-    refreshVariantUI();
     updateSummary();
   });
-
-  variants.forEach((variant) => {
-    const variantQty = variant.querySelector(".variant-qty");
-    const variantPlus = variant.querySelector(".variant-plus");
-    const variantMinus = variant.querySelector(".variant-minus");
-
-    variantPlus.addEventListener("click", () => {
-      if (totalVariant() >= paketQty * capacity) return;
-
-      variantQty.textContent = Number(variantQty.textContent) + 1;
-      variant.classList.add("selected");
-      refreshVariantUI();
-      updateSummary();
-    });
-
-    variantMinus.addEventListener("click", () => {
-      if (Number(variantQty.textContent) <= 0) return;
-
-      variantQty.textContent = Number(variantQty.textContent) - 1;
-
-      if (Number(variantQty.textContent) === 0) {
-        variant.classList.remove("selected");
-      }
-
-      refreshVariantUI();
-      updateSummary();
-    });
-  });
-
-  refreshVariantUI();
 });
 
 updateSummary();
@@ -136,15 +58,11 @@ function collectPaketData() {
     const qty = Number(card.querySelector(".paket-qty").textContent);
     if (qty <= 0) return;
 
-    const variants = [];
-    card.querySelectorAll(".variant").forEach((variant) => {
-      const variantQty = Number(variant.querySelector(".variant-qty").textContent);
-      if (variantQty > 0) {
-        variants.push({ code: variant.dataset.variant, qty: variantQty });
-      }
+    data.push({
+      paket: card.dataset.paket,
+      namaPaket: card.querySelector("strong").textContent,
+      qty,
     });
-
-    data.push({ paket: card.dataset.paket, qty, variants });
   });
 
   return data;
