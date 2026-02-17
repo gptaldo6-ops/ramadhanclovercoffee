@@ -191,29 +191,58 @@ function collectPaketData() {
 }
 
 function buildCotarQtyFields(paketList) {
+  const normalizeCode = (value) =>
+    String(value || "")
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
+
   const qtyByCode = {
-    "COTAR-1": 0,
-    "COTAR-2": 0,
-    "COTAR-3": 0,
-    "COTAR-4": 0,
+    COTAR1: 0,
+    COTAR2: 0,
+    COTAR3: 0,
+    COTAR4: 0,
   };
 
   paketList.forEach((item) => {
-    if (qtyByCode[item.paket] !== undefined) {
-      qtyByCode[item.paket] = item.qty;
+    const fromCode = normalizeCode(item.paket);
+    const fromName = normalizeCode(item.namaPaket);
+
+    if (qtyByCode[fromCode] !== undefined) {
+      qtyByCode[fromCode] += Number(item.qty) || 0;
+      return;
+    }
+
+    if (fromName.includes("COTAR1")) {
+      qtyByCode.COTAR1 += Number(item.qty) || 0;
+    } else if (fromName.includes("COTAR2")) {
+      qtyByCode.COTAR2 += Number(item.qty) || 0;
+    } else if (fromName.includes("COTAR3")) {
+      qtyByCode.COTAR3 += Number(item.qty) || 0;
+    } else if (fromName.includes("COTAR4")) {
+      qtyByCode.COTAR4 += Number(item.qty) || 0;
     }
   });
 
   return {
-    cotar1_qty: qtyByCode["COTAR-1"],
-    cotar2_qty: qtyByCode["COTAR-2"],
-    cotar3_qty: qtyByCode["COTAR-3"],
-    cotar4_qty: qtyByCode["COTAR-4"],
+    cotar1_qty: qtyByCode.COTAR1,
+    cotar2_qty: qtyByCode.COTAR2,
+    cotar3_qty: qtyByCode.COTAR3,
+    cotar4_qty: qtyByCode.COTAR4,
+    cotar1Qty: qtyByCode.COTAR1,
+    cotar2Qty: qtyByCode.COTAR2,
+    cotar3Qty: qtyByCode.COTAR3,
+    cotar4Qty: qtyByCode.COTAR4,
     cotar_total_qty:
-      qtyByCode["COTAR-1"] +
-      qtyByCode["COTAR-2"] +
-      qtyByCode["COTAR-3"] +
-      qtyByCode["COTAR-4"],
+      qtyByCode.COTAR1 +
+      qtyByCode.COTAR2 +
+      qtyByCode.COTAR3 +
+      qtyByCode.COTAR4,
+    cotarTotalQty:
+      qtyByCode.COTAR1 +
+      qtyByCode.COTAR2 +
+      qtyByCode.COTAR3 +
+      qtyByCode.COTAR4,
   };
 }
 
@@ -254,8 +283,10 @@ submitButton.addEventListener("click", () => {
     whatsapp,
     tanggal,
     jumlah_orang: jumlahOrang,
+    jumlahOrang,
     paket,
     total_harga: totalHarga,
+    totalHarga,
     ...cotarQtyFields,
   };
 
@@ -292,7 +323,11 @@ btnWA.addEventListener("click", () => {
     const input = document.createElement("input");
     input.type = "hidden";
     input.name = key;
-    input.value = typeof value === "string" ? value : JSON.stringify(value);
+    if (Array.isArray(value) || (value && typeof value === "object")) {
+      input.value = JSON.stringify(value);
+    } else {
+      input.value = String(value);
+    }
     form.appendChild(input);
   });
 
