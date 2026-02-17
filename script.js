@@ -292,7 +292,11 @@ btnWA.addEventListener("click", () => {
     const input = document.createElement("input");
     input.type = "hidden";
     input.name = key;
-    input.value = typeof value === "string" ? value : JSON.stringify(value);
+    if (Array.isArray(value) || (value && typeof value === "object")) {
+      input.value = JSON.stringify(value);
+    } else {
+      input.value = String(value);
+    }
     form.appendChild(input);
   });
 
