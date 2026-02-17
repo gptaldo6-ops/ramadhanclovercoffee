@@ -68,6 +68,33 @@ function collectPaketData() {
   return data;
 }
 
+function buildCotarQtyFields(paketList) {
+  const qtyByCode = {
+    "COTAR-1": 0,
+    "COTAR-2": 0,
+    "COTAR-3": 0,
+    "COTAR-4": 0,
+  };
+
+  paketList.forEach((item) => {
+    if (qtyByCode[item.paket] !== undefined) {
+      qtyByCode[item.paket] = item.qty;
+    }
+  });
+
+  return {
+    cotar1_qty: qtyByCode["COTAR-1"],
+    cotar2_qty: qtyByCode["COTAR-2"],
+    cotar3_qty: qtyByCode["COTAR-3"],
+    cotar4_qty: qtyByCode["COTAR-4"],
+    cotar_total_qty:
+      qtyByCode["COTAR-1"] +
+      qtyByCode["COTAR-2"] +
+      qtyByCode["COTAR-3"] +
+      qtyByCode["COTAR-4"],
+  };
+}
+
 submitButton.addEventListener("click", () => {
   const nama = document.getElementById("nama").value.trim();
   const whatsapp = document.getElementById("whatsapp").value.trim();
@@ -84,11 +111,14 @@ submitButton.addEventListener("click", () => {
     return;
   }
 
+  const cotarQtyFields = buildCotarQtyFields(paket);
+
   pendingPayload = {
     nama,
     whatsapp,
     tanggal,
     paket,
+    ...cotarQtyFields,
   };
 
   showPaymentPopup({
