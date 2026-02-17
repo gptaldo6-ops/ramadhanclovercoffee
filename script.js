@@ -6,6 +6,9 @@ const API_URL =
 const ADMIN_SETTINGS_KEY = "ramadhan_admin_settings";
 const RESERVATION_HISTORY_KEY = "ramadhan_reservation_history";
 
+const TABLE_CAPACITIES = [10, 10, 8, 6, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 2, 2];
+const TOTAL_SEATS = TABLE_CAPACITIES.reduce((sum, seats) => sum + seats, 0);
+
 const tanggalInput = document.getElementById("tanggal");
 const tanggalGrid = document.getElementById("tanggalGrid");
 const tanggalTrigger = document.getElementById("tanggalTrigger");
@@ -67,19 +70,81 @@ function formatRupiah(value) {
   return value.toLocaleString("id-ID");
 }
 
+function canServeParties(parties) {
+  const demands = parties.filter((x) => x > 0).sort((a, b) => b - a);
+  if (!demands.length) return true;
+
+  const demandTotal = demands.reduce((sum, value) => sum + value, 0);
+  if (demandTotal > TOTAL_SEATS) return false;
+
+  const memo = new Map();
+  const demandSuffix = new Array(demands.length + 1).fill(0);
+  for (let i = demands.length - 1; i >= 0; i -= 1) {
+    demandSuffix[i] = demandSuffix[i + 1] + demands[i];
+  }
+
+  function dfs(index, usedMask) {
+    if (index === demands.length) return true;
+
+    const key = `${index}|${usedMask}`;
+    if (memo.has(key)) return memo.get(key);
+
+    let remainingSeats = 0;
+    for (let i = 0; i < TABLE_CAPACITIES.length; i += 1) {
+      if ((usedMask & (1 << i)) === 0) {
+        remainingSeats += TABLE_CAPACITIES[i];
+      }
+    }
+
+    if (remainingSeats < demandSuffix[index]) {
+      memo.set(key, false);
+      return false;
+    }
+
+    const need = demands[index];
+    const candidates = [];
+
+    function buildSubsets(start, mask, sum, count) {
+      if (sum >= need) {
+        candidates.push({ mask, overflow: sum - need, count });
+        return;
+      }
+
+      for (let t = start; t < TABLE_CAPACITIES.length; t += 1) {
+        const bit = 1 << t;
+        if ((usedMask & bit) !== 0 || (mask & bit) !== 0) continue;
+        buildSubsets(t + 1, mask | bit, sum + TABLE_CAPACITIES[t], count + 1);
+      }
+    }
+
+    buildSubsets(0, 0, 0, 0);
+    candidates.sort((a, b) => a.overflow - b.overflow || a.count - b.count);
+
+    for (const option of candidates) {
+      if (dfs(index + 1, usedMask | option.mask)) {
+        memo.set(key, true);
+        return true;
+      }
+    }
+
+    memo.set(key, false);
+    return false;
+  }
+
+  return dfs(0, 0);
+}
+
 function getAdminSettings() {
   try {
     const raw = localStorage.getItem(ADMIN_SETTINGS_KEY);
     const parsed = raw ? JSON.parse(raw) : {};
     return {
       siteClosed: Boolean(parsed.siteClosed),
-      capacityPerDate: Number(parsed.capacityPerDate) > 0 ? Number(parsed.capacityPerDate) : 80,
       closedDates: Array.isArray(parsed.closedDates) ? parsed.closedDates : [],
     };
   } catch {
     return {
       siteClosed: false,
-      capacityPerDate: 80,
       closedDates: [],
     };
   }
@@ -94,24 +159,25 @@ function getReservationHistory() {
   }
 }
 
-function getReservedPeopleByDate() {
+function getReservationGroupsByDate() {
   const map = {};
   getReservationHistory().forEach((item) => {
     const date = item.tanggal;
     const people = Number(item.jumlah_orang || 0);
     if (!date || people <= 0) return;
-    map[date] = (map[date] || 0) + people;
+    if (!map[date]) map[date] = [];
+    map[date].push(people);
   });
   return map;
 }
 
-function isDateClosedOrFull(dateValue, settings, reservedPeopleByDate) {
+function isDateClosedOrFull(dateValue, settings, groupsByDate) {
   if (settings.closedDates.includes(dateValue)) {
     return true;
   }
 
-  const currentReserved = Number(reservedPeopleByDate[dateValue] || 0);
-  return currentReserved >= settings.capacityPerDate;
+  const parties = groupsByDate[dateValue] || [];
+  return !canServeParties([...parties, 1]);
 }
 
 function refreshSiteStatus() {
@@ -130,7 +196,7 @@ function applyBookingDateRange() {
   const { min, max } = getBookingDateRange();
   const currentValue = tanggalInput.value;
   const settings = getAdminSettings();
-  const reservedPeopleByDate = getReservedPeopleByDate();
+  const groupsByDate = getReservationGroupsByDate();
 
   tanggalGrid.innerHTML = "";
 
@@ -147,7 +213,7 @@ function applyBookingDateRange() {
 
     const labelDay = formatDisplayDay(cursor);
     const labelDate = formatDisplayDate(cursor);
-    const isBlocked = isDateClosedOrFull(value, settings, reservedPeopleByDate);
+    const isBlocked = isDateClosedOrFull(value, settings, groupsByDate);
 
     button.innerHTML = `<span>${labelDay}</span><strong>${labelDate}</strong>`;
 
@@ -323,15 +389,15 @@ submitButton.addEventListener("click", () => {
     return;
   }
 
-  const reservedPeopleByDate = getReservedPeopleByDate();
-  if (isDateClosedOrFull(tanggal, settings, reservedPeopleByDate)) {
-    alert("Tanggal ini sudah ditutup atau kapasitas penuh");
+  const groupsByDate = getReservationGroupsByDate();
+  if (settings.closedDates.includes(tanggal)) {
+    alert("Tanggal ini ditutup manual oleh admin");
     return;
   }
 
-  const currentReserved = Number(reservedPeopleByDate[tanggal] || 0);
-  if (currentReserved + jumlahOrang > settings.capacityPerDate) {
-    alert("Jumlah orang melebihi sisa kapasitas pada tanggal tersebut");
+  const currentParties = groupsByDate[tanggal] || [];
+  if (!canServeParties([...currentParties, jumlahOrang])) {
+    alert("Meja tidak cukup untuk menampung reservasi ini pada tanggal tersebut");
     return;
   }
 

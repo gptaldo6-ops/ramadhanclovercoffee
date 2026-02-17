@@ -2,6 +2,9 @@ const ADMIN_AUTH_KEY = "ramadhan_admin_auth";
 const ADMIN_SETTINGS_KEY = "ramadhan_admin_settings";
 const RESERVATION_HISTORY_KEY = "ramadhan_reservation_history";
 
+const TABLE_CAPACITIES = [10, 10, 8, 6, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 2, 2];
+const TOTAL_SEATS = TABLE_CAPACITIES.reduce((sum, seats) => sum + seats, 0);
+
 const loginSection = document.getElementById("loginSection");
 const dashboardSection = document.getElementById("dashboardSection");
 const adminPassword = document.getElementById("adminPassword");
@@ -9,7 +12,6 @@ const btnLogin = document.getElementById("btnLogin");
 const btnSave = document.getElementById("btnSave");
 const btnLogout = document.getElementById("btnLogout");
 const siteClosedInput = document.getElementById("siteClosed");
-const capacityPerDateInput = document.getElementById("capacityPerDate");
 const dateToggleGrid = document.getElementById("dateToggleGrid");
 const monitorTableWrap = document.getElementById("monitorTableWrap");
 
@@ -71,19 +73,81 @@ async function sha256(text) {
     .join("");
 }
 
+function canServeParties(parties) {
+  const demands = parties.filter((x) => x > 0).sort((a, b) => b - a);
+  if (!demands.length) return true;
+
+  const demandTotal = demands.reduce((sum, value) => sum + value, 0);
+  if (demandTotal > TOTAL_SEATS) return false;
+
+  const memo = new Map();
+  const demandSuffix = new Array(demands.length + 1).fill(0);
+  for (let i = demands.length - 1; i >= 0; i -= 1) {
+    demandSuffix[i] = demandSuffix[i + 1] + demands[i];
+  }
+
+  function dfs(index, usedMask) {
+    if (index === demands.length) return true;
+
+    const key = `${index}|${usedMask}`;
+    if (memo.has(key)) return memo.get(key);
+
+    let remainingSeats = 0;
+    for (let i = 0; i < TABLE_CAPACITIES.length; i += 1) {
+      if ((usedMask & (1 << i)) === 0) {
+        remainingSeats += TABLE_CAPACITIES[i];
+      }
+    }
+
+    if (remainingSeats < demandSuffix[index]) {
+      memo.set(key, false);
+      return false;
+    }
+
+    const need = demands[index];
+    const candidates = [];
+
+    function buildSubsets(start, mask, sum, count) {
+      if (sum >= need) {
+        candidates.push({ mask, overflow: sum - need, count });
+        return;
+      }
+
+      for (let t = start; t < TABLE_CAPACITIES.length; t += 1) {
+        const bit = 1 << t;
+        if ((usedMask & bit) !== 0 || (mask & bit) !== 0) continue;
+        buildSubsets(t + 1, mask | bit, sum + TABLE_CAPACITIES[t], count + 1);
+      }
+    }
+
+    buildSubsets(0, 0, 0, 0);
+    candidates.sort((a, b) => a.overflow - b.overflow || a.count - b.count);
+
+    for (const option of candidates) {
+      if (dfs(index + 1, usedMask | option.mask)) {
+        memo.set(key, true);
+        return true;
+      }
+    }
+
+    memo.set(key, false);
+    return false;
+  }
+
+  return dfs(0, 0);
+}
+
 function getAdminSettings() {
   try {
     const raw = localStorage.getItem(ADMIN_SETTINGS_KEY);
     const parsed = raw ? JSON.parse(raw) : {};
     return {
       siteClosed: Boolean(parsed.siteClosed),
-      capacityPerDate: Number(parsed.capacityPerDate) > 0 ? Number(parsed.capacityPerDate) : 80,
       closedDates: Array.isArray(parsed.closedDates) ? parsed.closedDates : [],
     };
   } catch {
     return {
       siteClosed: false,
-      capacityPerDate: 80,
       closedDates: [],
     };
   }
@@ -102,13 +166,14 @@ function getReservationHistory() {
   }
 }
 
-function getReservedPeopleByDate() {
+function getReservationGroupsByDate() {
   const map = {};
   getReservationHistory().forEach((item) => {
     const date = item.tanggal;
     const people = Number(item.jumlah_orang || 0);
     if (!date || people <= 0) return;
-    map[date] = (map[date] || 0) + people;
+    if (!map[date]) map[date] = [];
+    map[date].push(people);
   });
   return map;
 }
@@ -124,8 +189,14 @@ function showLogin() {
   loginSection.classList.remove("hidden");
 }
 
+function isDateFull(dateValue, groupsByDate) {
+  const parties = groupsByDate[dateValue] || [];
+  return !canServeParties([...parties, 1]);
+}
+
 function renderDateToggleGrid(settings) {
   dateToggleGrid.innerHTML = "";
+  const groupsByDate = getReservationGroupsByDate();
 
   const { min, max } = getBookingDateRange();
   let cursor = parseDateLocal(min);
@@ -137,8 +208,13 @@ function renderDateToggleGrid(settings) {
     button.type = "button";
     button.className = "tanggal-item";
 
-    if (settings.closedDates.includes(value)) {
+    const full = isDateFull(value, groupsByDate);
+    const manualClosed = settings.closedDates.includes(value);
+
+    if (manualClosed) {
       button.classList.add("closed-manual");
+    } else if (full) {
+      button.classList.add("disabled");
     }
 
     button.innerHTML = `<span>${formatDisplayDay(cursor)}</span><strong>${formatDisplayDate(cursor)}</strong>`;
@@ -161,7 +237,7 @@ function renderDateToggleGrid(settings) {
 }
 
 function renderMonitoringTable(settings) {
-  const reservedPeopleByDate = getReservedPeopleByDate();
+  const groupsByDate = getReservationGroupsByDate();
   const rows = [];
 
   const { min, max } = getBookingDateRange();
@@ -170,20 +246,23 @@ function renderMonitoringTable(settings) {
 
   while (cursor <= end) {
     const dateKey = toDateString(cursor);
-    const reserved = Number(reservedPeopleByDate[dateKey] || 0);
-    const remaining = settings.capacityPerDate - reserved;
+    const parties = groupsByDate[dateKey] || [];
+    const reserved = parties.reduce((sum, p) => sum + p, 0);
+    const estimateRemaining = Math.max(TOTAL_SEATS - reserved, 0);
+    const stillCanFit = canServeParties([...parties, 1]);
+
     const status = settings.closedDates.includes(dateKey)
       ? "Ditutup Manual"
-      : remaining <= 0
-        ? "Penuh"
+      : !stillCanFit
+        ? "Penuh (meja tidak cukup)"
         : "Tersedia";
 
     rows.push(`
       <tr>
         <td>${formatDisplayDay(cursor)}, ${formatDisplayDate(cursor)}</td>
         <td>${reserved}</td>
-        <td>${settings.capacityPerDate}</td>
-        <td>${remaining > 0 ? remaining : 0}</td>
+        <td>${TOTAL_SEATS}</td>
+        <td>${estimateRemaining}</td>
         <td>${status}</td>
       </tr>
     `);
@@ -197,8 +276,8 @@ function renderMonitoringTable(settings) {
         <tr>
           <th>Tanggal</th>
           <th>Sudah Reservasi (orang)</th>
-          <th>Kapasitas</th>
-          <th>Sisa</th>
+          <th>Total Kursi</th>
+          <th>Sisa Kursi (estimasi)</th>
           <th>Status</th>
         </tr>
       </thead>
@@ -213,8 +292,6 @@ function renderAdminUI() {
   const settings = getAdminSettings();
 
   siteClosedInput.checked = settings.siteClosed;
-  capacityPerDateInput.value = settings.capacityPerDate;
-
   renderDateToggleGrid(settings);
   renderMonitoringTable(settings);
 }
@@ -238,7 +315,6 @@ btnSave.addEventListener("click", () => {
   const updated = {
     ...current,
     siteClosed: siteClosedInput.checked,
-    capacityPerDate: Number(capacityPerDateInput.value) > 0 ? Number(capacityPerDateInput.value) : 80,
   };
 
   setAdminSettings(updated);

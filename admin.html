@@ -30,16 +30,14 @@
         <span>Tutup sementara website reservasi</span>
       </label>
 
-      <label>
-        Kapasitas Kafe per Tanggal<br />
-        <input type="number" id="capacityPerDate" min="1" />
-      </label>
-      <br /><br />
-
       <h4>Tutup Tanggal Secara Manual</h4>
       <div id="dateToggleGrid" class="tanggal-grid"></div>
 
-      <br />
+      <p class="hint">
+        Kapasitas meja (otomatis): Indoor 34 kursi, Semi Outdoor 55 kursi (total 89).
+        Semi outdoor bisa gabung meja, sistem akan mengecek apakah kombinasi meja masih cukup.
+      </p>
+
       <button type="button" id="btnSave">Simpan Pengaturan</button>
       <button type="button" id="btnLogout" class="secondary">Logout</button>
     </section>
@@ -47,7 +45,7 @@
     <section>
       <h3>Monitoring Reservasi per Tanggal</h3>
       <div id="monitorTableWrap"></div>
-      <p class="hint">Data jumlah orang diambil dari data reservasi lokal yang tercatat saat submit.</p>
+      <p class="hint">Status penuh dihitung berdasarkan kecukupan kombinasi meja, bukan hanya total kursi.</p>
     </section>
   </div>
 
