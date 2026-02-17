@@ -11,6 +11,48 @@ const paymentModal = document.getElementById("paymentModal");
 const payTotal = document.getElementById("payTotal");
 const btnWA = document.getElementById("btnWA");
 
+function toDateString(dateObj) {
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const day = String(dateObj.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(dateObj, days) {
+  const next = new Date(dateObj);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function getBookingDateRange() {
+  const rangeStart = new Date(2026, 1, 20);
+  const rangeEnd = addDays(rangeStart, 29);
+
+  const now = new Date();
+  const currentDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayCutoff = addDays(currentDay, now.getHours() >= 16 ? 1 : 0);
+
+  const effectiveMin = todayCutoff > rangeStart ? todayCutoff : rangeStart;
+
+  return {
+    min: toDateString(effectiveMin),
+    max: toDateString(rangeEnd),
+  };
+}
+
+function applyBookingDateRange() {
+  const { min, max } = getBookingDateRange();
+  tanggalInput.min = min;
+  tanggalInput.max = max;
+
+  if (tanggalInput.value) {
+    if (tanggalInput.value < min || tanggalInput.value > max) {
+      tanggalInput.value = "";
+    }
+  }
+}
+
+
 function formatRupiah(value) {
   return value.toLocaleString("id-ID");
 }
@@ -65,6 +107,11 @@ document.querySelectorAll(".paket-card").forEach((card) => {
 });
 
 updateSummary();
+applyBookingDateRange();
+
+tanggalInput.addEventListener("change", () => {
+  applyBookingDateRange();
+});
 
 function collectPaketData() {
   const data = [];
@@ -120,6 +167,12 @@ submitButton.addEventListener("click", () => {
 
   if (!nama || !whatsapp || !tanggal || jumlahOrang <= 0) {
     alert("Lengkapi data terlebih dahulu");
+    return;
+  }
+
+  const { min, max } = getBookingDateRange();
+  if (tanggal < min || tanggal > max) {
+    alert(`Tanggal reservasi hanya bisa dipilih dari ${min} sampai ${max}`);
     return;
   }
 
