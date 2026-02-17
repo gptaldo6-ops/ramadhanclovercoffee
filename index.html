@@ -4,230 +4,120 @@
   <meta charset="UTF-8" />
   <title>Reservasi Kafe</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
+  <img src="img/TextReservasi.png" alt="Text Reservasi" class="head-text" />
 
-<img src="img/TextReservasi.png" alt="Text Reservasi" class="head-text">
+  <section>
+    <h3>Data Pemesan</h3>
 
-<!-- 1. Data Pemesan -->
-<section>
-  <h3>Data Pemesan</h3>
+    <label>
+      Nama<br />
+      <input type="text" id="nama" placeholder="Nama lengkap" />
+    </label>
+    <br /><br />
 
-  <label>
-    Nama<br />
-    <input type="text" id="nama" placeholder="Nama lengkap" />
-  </label>
-  <br /><br />
+    <label>
+      Nomor WhatsApp<br />
+      <input type="tel" id="whatsapp" placeholder="08xxxxxxxxxx" />
+    </label>
+  </section>
 
-  <label>
-    Nomor WhatsApp<br />
-    <input type="tel" id="whatsapp" placeholder="08xxxxxxxxxx" />
-  </label>
-</section>
+  <section>
+    <h3>Pilih Tanggal</h3>
+    <input type="date" id="tanggal" />
+  </section>
 
-<hr />
+  <section>
+    <h3>Pilih Paket</h3>
 
-<!-- 2. Pilih Tanggal -->
-<section>
-  <h3>Pilih Tanggal</h3>
-  <input type="date" id="tanggal" />
-</section>
+    <label>
+      Jumlah Orang<br />
+      <input type="number" id="jumlahOrang" min="1" placeholder="Contoh: 4" />
+    </label>
+    <br />
 
-<hr />
-
-<!-- 3. Pilih Paket -->
-<section>
-  <h3>Pilih Paket</h3>
-
-  <!-- Paket A -->
-  <div class="paket-card" data-paket="A" data-capacity="2">
-    <div class="paket-header">
-      <strong>Paket A (2 orang)</strong>
-      <div class="qty-control">
-        <button type="button" class="paket-minus">−</button>
-        <span class="paket-qty">0</span>
-        <button type="button" class="paket-plus">+</button>
-      </div>
-    </div>
-
-    <div class="variant-list">
-      <div class="variant" data-variant="A1">
-        Variant A1
+    <div class="paket-card" data-paket="COTAR-1">
+      <div class="paket-header">
+        <strong>Cotar 1</strong>
         <div class="qty-control">
-          <button type="button" class="variant-minus">−</button>
-          <span class="variant-qty">0</span>
-          <button type="button" class="variant-plus">+</button>
-        </div>
-      </div>
-
-      <div class="variant" data-variant="A2">
-        Variant A2
-        <div class="qty-control">
-          <button type="button" class="variant-minus">−</button>
-          <span class="variant-qty">0</span>
-          <button type="button" class="variant-plus">+</button>
+          <button type="button" class="paket-minus">−</button>
+          <span class="paket-qty">0</span>
+          <button type="button" class="paket-plus">+</button>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Paket B -->
-  <div class="paket-card" data-paket="B" data-capacity="4">
-    <div class="paket-header">
-      <strong>Paket B (4 orang)</strong>
-      <div class="qty-control">
-        <button type="button" class="paket-minus">−</button>
-        <span class="paket-qty">0</span>
-        <button type="button" class="paket-plus">+</button>
+    <div class="paket-card" data-paket="COTAR-2">
+      <div class="paket-header">
+        <strong>Cotar 2</strong>
+        <div class="qty-control">
+          <button type="button" class="paket-minus">−</button>
+          <span class="paket-qty">0</span>
+          <button type="button" class="paket-plus">+</button>
+        </div>
       </div>
     </div>
 
-  <div class="variant-list">
-    <div class="variant" data-variant="B1">
-      Variant B1
-      <div class="qty-control">
-        <button type="button" class="variant-minus">−</button>
-        <span class="variant-qty">0</span>
-        <button type="button" class="variant-plus">+</button>
-      </div>
-    </div>
-  
-    <div class="variant" data-variant="B2">
-      Variant B2
-      <div class="qty-control">
-        <button type="button" class="variant-minus">−</button>
-        <span class="variant-qty">0</span>
-        <button type="button" class="variant-plus">+</button>
-      </div>
-    </div>
-  </div>
-
-  </div>
-
-  <!-- Paket C -->
-  <div class="paket-card" data-paket="C" data-capacity="1">
-    <div class="paket-header">
-      <strong>Paket C (1 orang)</strong>
-      <div class="qty-control">
-        <button type="button" class="paket-minus">−</button>
-        <span class="paket-qty">0</span>
-        <button type="button" class="paket-plus">+</button>
+    <div class="paket-card" data-paket="COTAR-3">
+      <div class="paket-header">
+        <strong>Cotar 3</strong>
+        <div class="qty-control">
+          <button type="button" class="paket-minus">−</button>
+          <span class="paket-qty">0</span>
+          <button type="button" class="paket-plus">+</button>
+        </div>
       </div>
     </div>
 
-    <div class="variant-list">
-  <div class="variant" data-variant="C1">
-    Variant C1
-    <div class="qty-control">
-      <button type="button" class="variant-minus">−</button>
-      <span class="variant-qty">0</span>
-      <button type="button" class="variant-plus">+</button>
-    </div>
-  </div>
-
-  <div class="variant" data-variant="C2">
-    Variant C2
-    <div class="qty-control">
-      <button type="button" class="variant-minus">−</button>
-      <span class="variant-qty">0</span>
-      <button type="button" class="variant-plus">+</button>
-    </div>
-  </div>
-</div>
-
-  </div>
-
-  <!-- Paket D -->
-  <div class="paket-card" data-paket="D" data-capacity="1">
-    <div class="paket-header">
-      <strong>Paket D (1 orang)</strong>
-      <div class="qty-control">
-        <button type="button" class="paket-minus">−</button>
-        <span class="paket-qty">0</span>
-        <button type="button" class="paket-plus">+</button>
+    <div class="paket-card" data-paket="COTAR-4">
+      <div class="paket-header">
+        <strong>Cotar 4</strong>
+        <div class="qty-control">
+          <button type="button" class="paket-minus">−</button>
+          <span class="paket-qty">0</span>
+          <button type="button" class="paket-plus">+</button>
+        </div>
       </div>
     </div>
+  </section>
 
-    <div class="variant-list">
-  <div class="variant" data-variant="D1">
-    Variant D1
-    <div class="qty-control">
-      <button type="button" class="variant-minus">−</button>
-      <span class="variant-qty">0</span>
-      <button type="button" class="variant-plus">+</button>
+  <section>
+    <h3>Ringkasan Pesanan</h3>
+    <div id="order-summary">
+      <p>Belum ada paket dipilih</p>
+    </div>
+  </section>
+
+  <section>
+    <button type="button" id="btnSubmit">Reservasi Sekarang</button>
+  </section>
+
+  <div id="paymentModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Pembayaran QRIS</h3>
+
+      <p class="label">Total Pembayaran</p>
+      <div class="total">Rp <span id="payTotal">0</span></div>
+
+      <img src="/qris.png" class="qris-img" alt="QRIS" />
+
+      <div class="instruksi">
+        <p>Instruksi Pembayaran:</p>
+        <ol>
+          <li>Scan QRIS di atas</li>
+          <li>Lakukan pembayaran sesuai total</li>
+          <li>Klik tombol di bawah untuk kirim bukti</li>
+        </ol>
+      </div>
+
+      <a id="btnWA" class="btn-wa" target="_blank">Kirim Bukti via WhatsApp</a>
+
+      <button class="btn-close" onclick="closePayment()">Tutup</button>
     </div>
   </div>
 
-  <div class="variant" data-variant="D2">
-    Variant D2
-    <div class="qty-control">
-      <button type="button" class="variant-minus">−</button>
-      <span class="variant-qty">0</span>
-      <button type="button" class="variant-plus">+</button>
-    </div>
-  </div>
-</div>
-
-  </div>
-</section>
-
-<section>
-  <h3>Ringkasan Pesanan</h3>
-  <div id="order-summary">
-    <p>Belum ada paket dipilih</p>
-  </div>
-</section>
-  
-<!-- 6. Submit -->
-<section>
-  <button type="button" id="btnSubmit">Reservasi Sekarang</button>
-</section>
-
-<div id="paymentModal" class="modal hidden">
-  <div class="modal-content">
-    <h3>Pembayaran QRIS</h3>
-
-    <p class="label">Total Pembayaran</p>
-    <div class="total">Rp <span id="payTotal">0</span></div>
-
-    <img src="/qris.png" class="qris-img" alt="QRIS">
-
-    <div class="instruksi">
-      <p>Instruksi Pembayaran:</p>
-      <ol>
-        <li>Scan QRIS di atas</li>
-        <li>Lakukan pembayaran sesuai total</li>
-        <li>Klik tombol di bawah untuk kirim bukti</li>
-      </ol>
-    </div>
-
-    <a id="btnWA" class="btn-wa" target="_blank">
-      Kirim Bukti via WhatsApp
-    </a>
-
-    <button class="btn-close" onclick="closePayment()">Tutup</button>
-  </div>
-</div>
-
-
-<script src="./script.js"></script>
-
+  <script src="./script.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
