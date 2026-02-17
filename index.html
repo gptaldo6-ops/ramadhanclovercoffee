@@ -26,7 +26,13 @@
 
   <section>
     <h3>Pilih Tanggal</h3>
-    <select id="tanggal"></select>
+    <input type="hidden" id="tanggal" />
+    <div class="tanggal-dropdown">
+      <button type="button" id="tanggalTrigger" class="tanggal-trigger">Pilih tanggal reservasi</button>
+      <div id="tanggalPanel" class="tanggal-panel hidden" aria-label="Pilih tanggal reservasi">
+        <div id="tanggalGrid" class="tanggal-grid"></div>
+      </div>
+    </div>
   </section>
 
   <section>

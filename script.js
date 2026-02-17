@@ -4,6 +4,9 @@ const API_URL =
   "https://script.google.com/macros/s/AKfycbwFU-fHZR5lphEAX0R-I_BvKQx5H1MtCBxgfQU7s6Xnc-RYgx3UZX61RY7eXshk3EX0Sw/exec";
 
 const tanggalInput = document.getElementById("tanggal");
+const tanggalGrid = document.getElementById("tanggalGrid");
+const tanggalTrigger = document.getElementById("tanggalTrigger");
+const tanggalPanel = document.getElementById("tanggalPanel");
 const jumlahOrangInput = document.getElementById("jumlahOrang");
 const summaryContainer = document.getElementById("order-summary");
 const submitButton = document.getElementById("btnSubmit");
@@ -16,6 +19,11 @@ function toDateString(dateObj) {
   const month = String(dateObj.getMonth() + 1).padStart(2, "0");
   const day = String(dateObj.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function parseDateLocal(dateString) {
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(year, month - 1, day);
 }
 
 function addDays(dateObj, days) {
@@ -44,37 +52,60 @@ function formatDisplayDate(dateObj) {
   return dateObj.toLocaleDateString("id-ID", {
     day: "2-digit",
     month: "short",
-    year: "numeric",
   });
+}
+
+function formatDisplayDay(dateObj) {
+  return dateObj.toLocaleDateString("id-ID", { weekday: "short" });
 }
 
 function applyBookingDateRange() {
   const { min, max } = getBookingDateRange();
   const currentValue = tanggalInput.value;
 
-  tanggalInput.innerHTML = "";
+  tanggalGrid.innerHTML = "";
 
-  const placeholder = document.createElement("option");
-  placeholder.value = "";
-  placeholder.textContent = "Pilih tanggal reservasi";
-  placeholder.disabled = true;
-  placeholder.selected = true;
-  tanggalInput.appendChild(placeholder);
-
-  let cursor = new Date(min);
-  const end = new Date(max);
+  let cursor = parseDateLocal(min);
+  const end = parseDateLocal(max);
+  let hasSelection = false;
 
   while (cursor <= end) {
     const value = toDateString(cursor);
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = formatDisplayDate(cursor);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "tanggal-item";
+    button.dataset.value = value;
+    const labelDay = formatDisplayDay(cursor);
+    const labelDate = formatDisplayDate(cursor);
+    button.innerHTML = `<span>${labelDay}</span><strong>${labelDate}</strong>`;
+
     if (value === currentValue) {
-      option.selected = true;
-      placeholder.selected = false;
+      button.classList.add("active");
+      hasSelection = true;
     }
-    tanggalInput.appendChild(option);
+
+    button.addEventListener("click", () => {
+      tanggalInput.value = value;
+      tanggalTrigger.textContent = `${labelDay}, ${labelDate}`;
+      document.querySelectorAll(".tanggal-item").forEach((item) => {
+        item.classList.toggle("active", item.dataset.value === value);
+      });
+      tanggalPanel.classList.add("hidden");
+    });
+
+    tanggalGrid.appendChild(button);
     cursor = addDays(cursor, 1);
+  }
+
+  if (!hasSelection) {
+    tanggalInput.value = "";
+    tanggalTrigger.textContent = "Pilih tanggal reservasi";
+  } else {
+    const activeItem = tanggalGrid.querySelector(".tanggal-item.active strong");
+    const activeDay = tanggalGrid.querySelector(".tanggal-item.active span");
+    if (activeItem && activeDay) {
+      tanggalTrigger.textContent = `${activeDay.textContent}, ${activeItem.textContent}`;
+    }
   }
 }
 
@@ -135,9 +166,17 @@ document.querySelectorAll(".paket-card").forEach((card) => {
 updateSummary();
 applyBookingDateRange();
 
-tanggalInput.addEventListener("change", () => {
-  applyBookingDateRange();
+tanggalTrigger.addEventListener("click", () => {
+  tanggalPanel.classList.toggle("hidden");
 });
+
+document.addEventListener("click", (event) => {
+  const isInside = event.target.closest(".tanggal-dropdown");
+  if (!isInside) {
+    tanggalPanel.classList.add("hidden");
+  }
+});
+
 
 function collectPaketData() {
   const data = [];
