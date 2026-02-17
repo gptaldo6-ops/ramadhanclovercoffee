@@ -40,15 +40,41 @@ function getBookingDateRange() {
   };
 }
 
+function formatDisplayDate(dateObj) {
+  return dateObj.toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 function applyBookingDateRange() {
   const { min, max } = getBookingDateRange();
-  tanggalInput.min = min;
-  tanggalInput.max = max;
+  const currentValue = tanggalInput.value;
 
-  if (tanggalInput.value) {
-    if (tanggalInput.value < min || tanggalInput.value > max) {
-      tanggalInput.value = "";
+  tanggalInput.innerHTML = "";
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Pilih tanggal reservasi";
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  tanggalInput.appendChild(placeholder);
+
+  let cursor = new Date(min);
+  const end = new Date(max);
+
+  while (cursor <= end) {
+    const value = toDateString(cursor);
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = formatDisplayDate(cursor);
+    if (value === currentValue) {
+      option.selected = true;
+      placeholder.selected = false;
     }
+    tanggalInput.appendChild(option);
+    cursor = addDays(cursor, 1);
   }
 }
 
