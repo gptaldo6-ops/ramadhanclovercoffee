@@ -1,4 +1,3 @@
-const ADMIN_PASSWORD = "ramadhan2026";
 const ADMIN_AUTH_KEY = "ramadhan_admin_auth";
 const ADMIN_SETTINGS_KEY = "ramadhan_admin_settings";
 const RESERVATION_HISTORY_KEY = "ramadhan_reservation_history";
@@ -13,6 +12,17 @@ const siteClosedInput = document.getElementById("siteClosed");
 const capacityPerDateInput = document.getElementById("capacityPerDate");
 const dateToggleGrid = document.getElementById("dateToggleGrid");
 const monitorTableWrap = document.getElementById("monitorTableWrap");
+
+const ADMIN_HASH_PARTS = [
+  "3d985db745e09e72",
+  "f07e86ec5efd656e",
+  "43caeb9e276b7c7b",
+  "da7c171288fcc81d",
+];
+
+function getExpectedAdminHash() {
+  return ADMIN_HASH_PARTS.join("");
+}
 
 function toDateString(dateObj) {
   const year = dateObj.getFullYear();
@@ -50,6 +60,15 @@ function formatDisplayDate(dateObj) {
 
 function formatDisplayDay(dateObj) {
   return dateObj.toLocaleDateString("id-ID", { weekday: "short" });
+}
+
+async function sha256(text) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 function getAdminSettings() {
@@ -200,13 +219,17 @@ function renderAdminUI() {
   renderMonitoringTable(settings);
 }
 
-btnLogin.addEventListener("click", () => {
-  if (adminPassword.value !== ADMIN_PASSWORD) {
+btnLogin.addEventListener("click", async () => {
+  const pass = adminPassword.value;
+  const hash = await sha256(pass);
+
+  if (hash !== getExpectedAdminHash()) {
     alert("Password admin salah");
     return;
   }
 
   localStorage.setItem(ADMIN_AUTH_KEY, "1");
+  adminPassword.value = "";
   showDashboard();
 });
 
