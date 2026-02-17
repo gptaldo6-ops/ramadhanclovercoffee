@@ -4,6 +4,7 @@ const API_URL =
   "https://script.google.com/macros/s/AKfycbwFU-fHZR5lphEAX0R-I_BvKQx5H1MtCBxgfQU7s6Xnc-RYgx3UZX61RY7eXshk3EX0Sw/exec";
 
 const tanggalInput = document.getElementById("tanggal");
+const jumlahOrangInput = document.getElementById("jumlahOrang");
 const summaryContainer = document.getElementById("order-summary");
 const submitButton = document.getElementById("btnSubmit");
 const paymentModal = document.getElementById("paymentModal");
@@ -99,8 +100,9 @@ submitButton.addEventListener("click", () => {
   const nama = document.getElementById("nama").value.trim();
   const whatsapp = document.getElementById("whatsapp").value.trim();
   const tanggal = tanggalInput.value;
+  const jumlahOrang = Number(jumlahOrangInput.value);
 
-  if (!nama || !whatsapp || !tanggal) {
+  if (!nama || !whatsapp || !tanggal || jumlahOrang <= 0) {
     alert("Lengkapi data terlebih dahulu");
     return;
   }
@@ -117,6 +119,7 @@ submitButton.addEventListener("click", () => {
     nama,
     whatsapp,
     tanggal,
+    jumlah_orang: jumlahOrang,
     paket,
     ...cotarQtyFields,
   };
