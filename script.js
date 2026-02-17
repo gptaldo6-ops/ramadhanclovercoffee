@@ -11,17 +11,31 @@ const paymentModal = document.getElementById("paymentModal");
 const payTotal = document.getElementById("payTotal");
 const btnWA = document.getElementById("btnWA");
 
+function formatRupiah(value) {
+  return value.toLocaleString("id-ID");
+}
+
 function updateSummary() {
   let html = "";
   let hasData = false;
 
   document.querySelectorAll(".paket-card").forEach((card) => {
     const paketName = card.querySelector("strong").textContent;
+    const paketInfo = card.dataset.info;
+    const harga = Number(card.dataset.harga);
     const qty = Number(card.querySelector(".paket-qty").textContent);
+
     if (qty <= 0) return;
 
     hasData = true;
-    html += `<strong>${paketName} × ${qty}</strong><br/>`;
+    html += `
+      <div class="summary-item">
+        <strong>${paketName} × ${qty}</strong><br/>
+        <span class="summary-meta">${paketInfo}</span><br/>
+        <span class="summary-meta">Rp${formatRupiah(harga)} / paket</span><br/>
+        <span>Subtotal: Rp${formatRupiah(harga * qty)}</span>
+      </div>
+    `;
   });
 
   summaryContainer.innerHTML = hasData ? html : "<p>Belum ada paket dipilih</p>";
@@ -62,6 +76,8 @@ function collectPaketData() {
     data.push({
       paket: card.dataset.paket,
       namaPaket: card.querySelector("strong").textContent,
+      infoPaket: card.dataset.info,
+      harga: Number(card.dataset.harga),
       qty,
     });
   });
@@ -113,7 +129,14 @@ submitButton.addEventListener("click", () => {
     return;
   }
 
+  const totalPaket = paket.reduce((sum, item) => sum + item.qty, 0);
+  if (totalPaket < jumlahOrang) {
+    alert("Jumlah paket harus sama atau lebih banyak dari jumlah orang");
+    return;
+  }
+
   const cotarQtyFields = buildCotarQtyFields(paket);
+  const totalHarga = paket.reduce((sum, item) => sum + item.harga * item.qty, 0);
 
   pendingPayload = {
     nama,
@@ -121,6 +144,7 @@ submitButton.addEventListener("click", () => {
     tanggal,
     jumlah_orang: jumlahOrang,
     paket,
+    total_harga: totalHarga,
     ...cotarQtyFields,
   };
 
@@ -128,12 +152,12 @@ submitButton.addEventListener("click", () => {
     resvId: "R-TEST-01",
     nama,
     tanggal,
-    total: 150000,
+    total: totalHarga,
   });
 });
 
 function showPaymentPopup({ resvId, nama, tanggal, total }) {
-  payTotal.textContent = total.toLocaleString("id-ID");
+  payTotal.textContent = formatRupiah(total);
 
   btnWA.href =
     "https://wa.me/6285156076002?text=" +
