@@ -144,11 +144,15 @@ function getAdminSettings() {
     return {
       siteClosed: Boolean(parsed.siteClosed),
       closedDates: Array.isArray(parsed.closedDates) ? parsed.closedDates : [],
+      manualReservedByDate: parsed.manualReservedByDate && typeof parsed.manualReservedByDate === "object" ? parsed.manualReservedByDate : {},
+      maxPeopleByDate: parsed.maxPeopleByDate && typeof parsed.maxPeopleByDate === "object" ? parsed.maxPeopleByDate : {},
     };
   } catch {
     return {
       siteClosed: false,
       closedDates: [],
+      manualReservedByDate: {},
+      maxPeopleByDate: {},
     };
   }
 }
@@ -178,6 +182,17 @@ function getReservationGroupsByDate() {
   return map;
 }
 
+
+function getReservedCountForDate(dateKey, groupsByDate, settings) {
+  const manualValue = Number(settings.manualReservedByDate?.[dateKey]);
+  if (Number.isFinite(manualValue) && manualValue >= 0) {
+    return manualValue;
+  }
+
+  const parties = groupsByDate[dateKey] || [];
+  return parties.reduce((sum, p) => sum + p, 0);
+}
+
 function showDashboard() {
   loginSection.classList.add("hidden");
   dashboardSection.classList.remove("hidden");
@@ -189,7 +204,12 @@ function showLogin() {
   loginSection.classList.remove("hidden");
 }
 
-function isDateFull(dateValue, groupsByDate) {
+function isDateFull(dateValue, groupsByDate, settings) {
+  const manualValue = Number(settings.manualReservedByDate?.[dateValue]);
+  if (Number.isFinite(manualValue) && manualValue >= 0) {
+    return manualValue >= TOTAL_SEATS;
+  }
+
   const parties = groupsByDate[dateValue] || [];
   return !canServeParties([...parties, 1]);
 }
@@ -208,7 +228,7 @@ function renderDateToggleGrid(settings) {
     button.type = "button";
     button.className = "tanggal-item";
 
-    const full = isDateFull(value, groupsByDate);
+    const full = isDateFull(value, groupsByDate, settings);
     const manualClosed = settings.closedDates.includes(value);
 
     if (manualClosed) {
@@ -247,20 +267,25 @@ function renderMonitoringTable(settings) {
   while (cursor <= end) {
     const dateKey = toDateString(cursor);
     const parties = groupsByDate[dateKey] || [];
-    const reserved = parties.reduce((sum, p) => sum + p, 0);
+    const reserved = getReservedCountForDate(dateKey, groupsByDate, settings);
     const estimateRemaining = Math.max(TOTAL_SEATS - reserved, 0);
-    const stillCanFit = canServeParties([...parties, 1]);
+    const manualValue = Number(settings.manualReservedByDate?.[dateKey]);
+    const maxPeople = Number(settings.maxPeopleByDate?.[dateKey]);
+    const stillCanFit = Number.isFinite(manualValue) && manualValue >= 0
+      ? reserved < TOTAL_SEATS
+      : canServeParties([...parties, 1]);
 
     const status = settings.closedDates.includes(dateKey)
       ? "Ditutup Manual"
       : !stillCanFit
-        ? "Penuh (meja tidak cukup)"
+        ? "Penuh"
         : "Tersedia";
 
     rows.push(`
       <tr>
         <td>${formatDisplayDay(cursor)}, ${formatDisplayDate(cursor)}</td>
-        <td>${reserved}</td>
+        <td><input type="number" min="0" class="reserved-input" data-date="${dateKey}" value="${reserved}" /></td>
+        <td><input type="number" min="1" class="max-people-input" data-date="${dateKey}" value="${Number.isFinite(maxPeople) && maxPeople > 0 ? maxPeople : ""}" placeholder="-" /></td>
         <td>${TOTAL_SEATS}</td>
         <td>${estimateRemaining}</td>
         <td>${status}</td>
@@ -275,7 +300,8 @@ function renderMonitoringTable(settings) {
       <thead>
         <tr>
           <th>Tanggal</th>
-          <th>Sudah Reservasi (orang)</th>
+          <th>Sudah Reservasi (editable)</th>
+          <th>Max Orang / Reservasi</th>
           <th>Total Kursi</th>
           <th>Sisa Kursi (estimasi)</th>
           <th>Status</th>
@@ -312,9 +338,32 @@ btnLogin.addEventListener("click", async () => {
 
 btnSave.addEventListener("click", () => {
   const current = getAdminSettings();
+  const manualReservedByDate = { ...(current.manualReservedByDate || {}) };
+  const maxPeopleByDate = { ...(current.maxPeopleByDate || {}) };
+
+  document.querySelectorAll(".reserved-input").forEach((input) => {
+    const date = input.dataset.date;
+    const value = Number(input.value);
+    if (!date) return;
+    manualReservedByDate[date] = Number.isFinite(value) && value >= 0 ? value : 0;
+  });
+
+  document.querySelectorAll(".max-people-input").forEach((input) => {
+    const date = input.dataset.date;
+    const value = Number(input.value);
+    if (!date) return;
+    if (Number.isFinite(value) && value > 0) {
+      maxPeopleByDate[date] = value;
+    } else {
+      delete maxPeopleByDate[date];
+    }
+  });
+
   const updated = {
     ...current,
     siteClosed: siteClosedInput.checked,
+    manualReservedByDate,
+    maxPeopleByDate,
   };
 
   setAdminSettings(updated);

@@ -141,11 +141,15 @@ function getAdminSettings() {
     return {
       siteClosed: Boolean(parsed.siteClosed),
       closedDates: Array.isArray(parsed.closedDates) ? parsed.closedDates : [],
+      manualReservedByDate: parsed.manualReservedByDate && typeof parsed.manualReservedByDate === "object" ? parsed.manualReservedByDate : {},
+      maxPeopleByDate: parsed.maxPeopleByDate && typeof parsed.maxPeopleByDate === "object" ? parsed.maxPeopleByDate : {},
     };
   } catch {
     return {
       siteClosed: false,
       closedDates: [],
+      manualReservedByDate: {},
+      maxPeopleByDate: {},
     };
   }
 }
@@ -171,9 +175,31 @@ function getReservationGroupsByDate() {
   return map;
 }
 
+
+
+function getMaxPeopleForDate(dateKey, settings) {
+  const value = Number(settings.maxPeopleByDate?.[dateKey]);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function getReservedCountForDate(dateKey, groupsByDate, settings) {
+  const manualValue = Number(settings.manualReservedByDate?.[dateKey]);
+  if (Number.isFinite(manualValue) && manualValue >= 0) {
+    return manualValue;
+  }
+
+  const parties = groupsByDate[dateKey] || [];
+  return parties.reduce((sum, p) => sum + p, 0);
+}
+
 function isDateClosedOrFull(dateValue, settings, groupsByDate) {
   if (settings.closedDates.includes(dateValue)) {
     return true;
+  }
+
+  const manualValue = Number(settings.manualReservedByDate?.[dateValue]);
+  if (Number.isFinite(manualValue) && manualValue >= 0) {
+    return manualValue >= TOTAL_SEATS;
   }
 
   const parties = groupsByDate[dateValue] || [];
@@ -390,15 +416,32 @@ submitButton.addEventListener("click", () => {
   }
 
   const groupsByDate = getReservationGroupsByDate();
+  const maxPeople = getMaxPeopleForDate(tanggal, settings);
+
+  if (maxPeople && jumlahOrang > maxPeople) {
+    alert(`Mohon maaf, sudah penuh untuk ${jumlahOrang} orang`);
+    return;
+  }
+
   if (settings.closedDates.includes(tanggal)) {
     alert("Tanggal ini ditutup manual oleh admin");
     return;
   }
 
-  const currentParties = groupsByDate[tanggal] || [];
-  if (!canServeParties([...currentParties, jumlahOrang])) {
-    alert("Meja tidak cukup untuk menampung reservasi ini pada tanggal tersebut");
-    return;
+  const manualReserved = getReservedCountForDate(tanggal, groupsByDate, settings);
+  const manualValue = Number(settings.manualReservedByDate?.[tanggal]);
+
+  if (Number.isFinite(manualValue) && manualValue >= 0) {
+    if (manualReserved + jumlahOrang > TOTAL_SEATS) {
+      alert("Kapasitas tidak cukup berdasarkan jumlah reservasi yang diatur admin");
+      return;
+    }
+  } else {
+    const currentParties = groupsByDate[tanggal] || [];
+    if (!canServeParties([...currentParties, jumlahOrang])) {
+      alert("Meja tidak cukup untuk menampung reservasi ini pada tanggal tersebut");
+      return;
+    }
   }
 
   const paket = collectPaketData();
