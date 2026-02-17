@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Admin Reservasi</title>
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./admin.css" />
+</head>
+<body>
+  <section id="loginSection">
+    <h3>Login Admin</h3>
+    <label>
+      Password Admin<br />
+      <input type="password" id="adminPassword" placeholder="Masukkan password" />
+    </label>
+    <br /><br />
+    <button type="button" id="btnLogin">Masuk</button>
+    <p class="hint">Login sederhana untuk kontrol operasional.</p>
+  </section>
+
+  <div id="dashboardSection" class="hidden">
+    <section>
+      <h3>Kontrol Website Reservasi</h3>
+
+      <label class="check-row">
+        <input type="checkbox" id="siteClosed" />
+        <span>Tutup sementara website reservasi</span>
+      </label>
+
+      <label>
+        Kapasitas Kafe per Tanggal<br />
+        <input type="number" id="capacityPerDate" min="1" />
+      </label>
+      <br /><br />
+
+      <h4>Tutup Tanggal Secara Manual</h4>
+      <div id="dateToggleGrid" class="tanggal-grid"></div>
+
+      <br />
+      <button type="button" id="btnSave">Simpan Pengaturan</button>
+      <button type="button" id="btnLogout" class="secondary">Logout</button>
+    </section>
+
+    <section>
+      <h3>Monitoring Reservasi per Tanggal</h3>
+      <div id="monitorTableWrap"></div>
+      <p class="hint">Data jumlah orang diambil dari data reservasi lokal yang tercatat saat submit.</p>
+    </section>
+  </div>
+
+  <script src="./admin.js"></script>
+</body>
+</html>
