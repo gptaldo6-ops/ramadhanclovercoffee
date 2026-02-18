@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Cotar 4">
+  <defs>
+    <linearGradient id="bg4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2d5f45"/>
+      <stop offset="100%" stop-color="#123023"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg4)"/>
+  <rect x="95" y="120" width="210" height="180" rx="32" fill="#8cd0b0"/>
+  <path d="M125 220h150" stroke="#e9fff3" stroke-width="16" stroke-linecap="round"/>
+  <text x="200" y="360" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" fill="#fff">Cotar 4</text>
+</svg>
