@@ -1,189 +1,58 @@
 let pendingPayload = null;
 
-const API_URL =
-  "https://script.google.com/macros/s/AKfycbwFU-fHZR5lphEAX0R-I_BvKQx5H1MtCBxgfQU7s6Xnc-RYgx3UZX61RY7eXshk3EX0Sw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwFU-fHZR5lphEAX0R-I_BvKQx5H1MtCBxgfQU7s6Xnc-RYgx3UZX61RY7eXshk3EX0Sw/exec";
 
 const tanggalInput = document.getElementById("tanggal");
-const tanggalGrid = document.getElementById("tanggalGrid");
-const tanggalTrigger = document.getElementById("tanggalTrigger");
-const tanggalPanel = document.getElementById("tanggalPanel");
 const jumlahOrangInput = document.getElementById("jumlahOrang");
-const summaryContainer = document.getElementById("order-summary");
 const submitButton = document.getElementById("btnSubmit");
-const paymentModal = document.getElementById("paymentModal");
 const payTotal = document.getElementById("payTotal");
 const btnWA = document.getElementById("btnWA");
+const paymentModal = document.getElementById("paymentModal");
 
-function toDateString(dateObj) {
-  const year = dateObj.getFullYear();
-  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-  const day = String(dateObj.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function parseDateLocal(dateString) {
-  const [year, month, day] = dateString.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
-
-function addDays(dateObj, days) {
-  const next = new Date(dateObj);
-  next.setDate(next.getDate() + days);
-  return next;
-}
-
-function getBookingDateRange() {
-  const rangeStart = new Date(2026, 1, 20);
-  const rangeEnd = addDays(rangeStart, 29);
-
-  const now = new Date();
-  const currentDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const todayCutoff = addDays(currentDay, now.getHours() >= 16 ? 1 : 0);
-  const effectiveMin = todayCutoff > rangeStart ? todayCutoff : rangeStart;
-
-  return {
-    min: toDateString(effectiveMin),
-    max: toDateString(rangeEnd),
-  };
-}
-
-function formatDisplayDate(dateObj) {
-  return dateObj.toLocaleDateString("id-ID", {
-    day: "2-digit",
-    month: "short",
-  });
-}
-
-function formatDisplayDay(dateObj) {
-  return dateObj.toLocaleDateString("id-ID", { weekday: "short" });
-}
+/* =====================
+   FORMAT
+===================== */
 
 function formatRupiah(value) {
-  return value.toLocaleString("id-ID");
+  return Number(value).toLocaleString("id-ID");
 }
 
-function applyBookingDateRange() {
-  const { min, max } = getBookingDateRange();
-  const currentValue = tanggalInput.value;
-
-  tanggalGrid.innerHTML = "";
-
-  let cursor = parseDateLocal(min);
-  const end = parseDateLocal(max);
-  let hasSelection = false;
-
-  while (cursor <= end) {
-    const value = toDateString(cursor);
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "tanggal-item";
-    button.dataset.value = value;
-
-    const labelDay = formatDisplayDay(cursor);
-    const labelDate = formatDisplayDate(cursor);
-    button.innerHTML = `<span>${labelDay}</span><strong>${labelDate}</strong>`;
-
-    if (value === currentValue) {
-      button.classList.add("active");
-      hasSelection = true;
-    }
-
-    button.addEventListener("click", () => {
-      tanggalInput.value = value;
-      tanggalTrigger.textContent = `${labelDay}, ${labelDate}`;
-
-      document.querySelectorAll(".tanggal-item").forEach((item) => {
-        item.classList.toggle("active", item.dataset.value === value);
-      });
-
-      tanggalPanel.classList.add("hidden");
-    });
-
-    tanggalGrid.appendChild(button);
-    cursor = addDays(cursor, 1);
-  }
-
-  if (!hasSelection) {
-    tanggalInput.value = "";
-    tanggalTrigger.textContent = "Pilih tanggal reservasi";
-  }
-}
-
-function updateSummary() {
-  let html = "";
-  let hasData = false;
-
-  document.querySelectorAll(".paket-card").forEach((card) => {
-    const paketName = card.querySelector("strong").textContent;
-    const paketInfo = card.dataset.info;
-    const harga = Number(card.dataset.harga);
-    const qty = Number(card.querySelector(".paket-qty").textContent);
-
-    if (qty <= 0) return;
-
-    hasData = true;
-    html += `
-      <div class="summary-item">
-        <strong>${paketName} × ${qty}</strong><br/>
-        <span class="summary-meta">${paketInfo}</span><br/>
-        <span class="summary-meta">Rp${formatRupiah(harga)} / paket</span><br/>
-        <span>Subtotal: Rp${formatRupiah(harga * qty)}</span>
-      </div>
-    `;
-  });
-
-  summaryContainer.innerHTML = hasData ? html : "<p>Belum ada paket dipilih</p>";
-}
+/* =====================
+   QTY CONTROL
+===================== */
 
 document.querySelectorAll(".paket-card").forEach((card) => {
   const qtyEl = card.querySelector(".paket-qty");
   const plus = card.querySelector(".paket-plus");
   const minus = card.querySelector(".paket-minus");
 
-  let paketQty = 0;
-
   plus.addEventListener("click", () => {
-    paketQty += 1;
-    qtyEl.textContent = paketQty;
-    updateSummary();
+    const current = Number(qtyEl.textContent) || 0;
+    qtyEl.textContent = current + 1;
   });
 
   minus.addEventListener("click", () => {
-    if (paketQty > 0) {
-      paketQty -= 1;
-    }
-    qtyEl.textContent = paketQty;
-    updateSummary();
+    const current = Number(qtyEl.textContent) || 0;
+    qtyEl.textContent = current > 0 ? current - 1 : 0;
   });
 });
 
-updateSummary();
-applyBookingDateRange();
-
-tanggalTrigger.addEventListener("click", () => {
-  tanggalPanel.classList.toggle("hidden");
-});
-
-document.addEventListener("click", (event) => {
-  const isInside = event.target.closest(".tanggal-dropdown");
-  if (!isInside) {
-    tanggalPanel.classList.add("hidden");
-  }
-});
+/* =====================
+   COLLECT DATA
+===================== */
 
 function collectPaketData() {
   const data = [];
 
   document.querySelectorAll(".paket-card").forEach((card) => {
-    const qty = Number(card.querySelector(".paket-qty").textContent);
+    const qty = Number(card.querySelector(".paket-qty").textContent) || 0;
     if (qty <= 0) return;
 
     data.push({
-      paket: card.dataset.paket,
-      namaPaket: card.querySelector("strong").textContent,
-      infoPaket: card.dataset.info,
+      kode: card.dataset.paket.replace("-", "").toUpperCase(),
+      nama: card.querySelector("strong").textContent,
       harga: Number(card.dataset.harga),
-      qty,
+      qty: qty
     });
   });
 
@@ -191,126 +60,70 @@ function collectPaketData() {
 }
 
 function buildCotarQtyFields(paketList) {
-  const normalizeCode = (value) =>
-    String(value || "")
-      .trim()
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "");
-
-  const qtyByCode = {
-    COTAR1: 0,
-    COTAR2: 0,
-    COTAR3: 0,
-    COTAR4: 0,
+  const result = {
+    cotar1_qty: 0,
+    cotar2_qty: 0,
+    cotar3_qty: 0,
+    cotar4_qty: 0
   };
 
-  paketList.forEach((item) => {
-    const fromCode = normalizeCode(item.paket);
-    const fromName = normalizeCode(item.namaPaket);
-
-    if (qtyByCode[fromCode] !== undefined) {
-      qtyByCode[fromCode] += Number(item.qty) || 0;
-      return;
-    }
-
-    if (fromName.includes("COTAR1")) {
-      qtyByCode.COTAR1 += Number(item.qty) || 0;
-    } else if (fromName.includes("COTAR2")) {
-      qtyByCode.COTAR2 += Number(item.qty) || 0;
-    } else if (fromName.includes("COTAR3")) {
-      qtyByCode.COTAR3 += Number(item.qty) || 0;
-    } else if (fromName.includes("COTAR4")) {
-      qtyByCode.COTAR4 += Number(item.qty) || 0;
-    }
+  paketList.forEach(item => {
+    if (item.kode === "COTAR1") result.cotar1_qty += item.qty;
+    if (item.kode === "COTAR2") result.cotar2_qty += item.qty;
+    if (item.kode === "COTAR3") result.cotar3_qty += item.qty;
+    if (item.kode === "COTAR4") result.cotar4_qty += item.qty;
   });
 
-  return {
-    cotar1_qty: qtyByCode.COTAR1,
-    cotar2_qty: qtyByCode.COTAR2,
-    cotar3_qty: qtyByCode.COTAR3,
-    cotar4_qty: qtyByCode.COTAR4,
-    cotar1Qty: qtyByCode.COTAR1,
-    cotar2Qty: qtyByCode.COTAR2,
-    cotar3Qty: qtyByCode.COTAR3,
-    cotar4Qty: qtyByCode.COTAR4,
-    cotar_total_qty:
-      qtyByCode.COTAR1 +
-      qtyByCode.COTAR2 +
-      qtyByCode.COTAR3 +
-      qtyByCode.COTAR4,
-    cotarTotalQty:
-      qtyByCode.COTAR1 +
-      qtyByCode.COTAR2 +
-      qtyByCode.COTAR3 +
-      qtyByCode.COTAR4,
-  };
+  return result;
 }
+
+/* =====================
+   SUBMIT
+===================== */
 
 submitButton.addEventListener("click", () => {
   const nama = document.getElementById("nama").value.trim();
   const whatsapp = document.getElementById("whatsapp").value.trim();
   const tanggal = tanggalInput.value;
-  const jumlahOrang = Number(jumlahOrangInput.value);
+  const jumlahOrang = Number(jumlahOrangInput.value) || 0;
 
   if (!nama || !whatsapp || !tanggal || jumlahOrang <= 0) {
     alert("Lengkapi data terlebih dahulu");
     return;
   }
 
-  const { min, max } = getBookingDateRange();
-  if (tanggal < min || tanggal > max) {
-    alert(`Tanggal reservasi hanya bisa dipilih dari ${min} sampai ${max}`);
-    return;
-  }
-
   const paket = collectPaketData();
   if (!paket.length) {
-    alert("Pilih paket");
+    alert("Pilih minimal satu paket");
     return;
   }
 
-  const totalPaket = paket.reduce((sum, item) => sum + item.qty, 0);
-  if (totalPaket < jumlahOrang) {
-    alert("Jumlah paket harus sama atau lebih banyak dari jumlah orang");
-    return;
-  }
+  const cotarFields = buildCotarQtyFields(paket);
 
-  const cotarQtyFields = buildCotarQtyFields(paket);
-  const totalHarga = paket.reduce((sum, item) => sum + item.harga * item.qty, 0);
+  const totalHarga = paket.reduce((sum, p) => sum + (p.harga * p.qty), 0);
 
   pendingPayload = {
     nama,
     whatsapp,
     tanggal,
     jumlah_orang: jumlahOrang,
-    jumlahOrang,
-    paket,
     total_harga: totalHarga,
-    totalHarga,
-    ...cotarQtyFields,
+    ...cotarFields,
+    paket
   };
 
-  showPaymentPopup({
-    resvId: "R-TEST-01",
-    nama,
-    tanggal,
-    total: totalHarga,
-  });
-});
-
-function showPaymentPopup({ resvId, nama, tanggal, total }) {
-  payTotal.textContent = formatRupiah(total);
+  payTotal.textContent = formatRupiah(totalHarga);
 
   btnWA.href =
     "https://wa.me/6285156076002?text=" +
-    encodeURIComponent(`Kode: ${resvId}\nNama: ${nama}\nTanggal: ${tanggal}`);
+    encodeURIComponent(`Nama: ${nama}\nTanggal: ${tanggal}`);
 
   paymentModal.classList.remove("hidden");
-}
+});
 
-function closePayment() {
-  paymentModal.classList.add("hidden");
-}
+/* =====================
+   SEND TO APPS SCRIPT
+===================== */
 
 btnWA.addEventListener("click", () => {
   if (!pendingPayload) return;
@@ -323,17 +136,12 @@ btnWA.addEventListener("click", () => {
     const input = document.createElement("input");
     input.type = "hidden";
     input.name = key;
-    if (Array.isArray(value) || (value && typeof value === "object")) {
-      input.value = JSON.stringify(value);
-    } else {
-      input.value = String(value);
-    }
+    input.value = typeof value === "object"
+      ? JSON.stringify(value)
+      : String(value);
     form.appendChild(input);
   });
 
   document.body.appendChild(form);
   form.submit();
-  form.remove();
 });
-
-window.closePayment = closePayment;
