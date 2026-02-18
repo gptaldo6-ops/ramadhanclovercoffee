@@ -13,6 +13,8 @@ const submitButton = document.getElementById("btnSubmit");
 const paymentModal = document.getElementById("paymentModal");
 const payTotal = document.getElementById("payTotal");
 const btnWA = document.getElementById("btnWA");
+const paketList = document.getElementById("paketList");
+const paketSkeleton = document.getElementById("paketSkeleton");
 
 function toDateString(dateObj) {
   const year = dateObj.getFullYear();
@@ -113,7 +115,7 @@ function updateSummary() {
   let html = "";
   let hasData = false;
 
-  document.querySelectorAll(".paket-card").forEach((card) => {
+  document.querySelectorAll("#paketList .paket-card").forEach((card) => {
     const paketName = card.querySelector("strong").textContent;
     const paketInfo = card.dataset.info;
     const harga = Number(card.dataset.harga);
@@ -135,7 +137,7 @@ function updateSummary() {
   summaryContainer.innerHTML = hasData ? html : "<p>Belum ada paket dipilih</p>";
 }
 
-document.querySelectorAll(".paket-card").forEach((card) => {
+document.querySelectorAll("#paketList .paket-card").forEach((card) => {
   const qtyEl = card.querySelector(".paket-qty");
   const plus = card.querySelector(".paket-plus");
   const minus = card.querySelector(".paket-minus");
@@ -174,7 +176,7 @@ document.addEventListener("click", (event) => {
 function collectPaketData() {
   const data = [];
 
-  document.querySelectorAll(".paket-card").forEach((card) => {
+  document.querySelectorAll("#paketList .paket-card").forEach((card) => {
     const qty = Number(card.querySelector(".paket-qty").textContent);
     if (qty <= 0) return;
 
@@ -188,6 +190,42 @@ function collectPaketData() {
   });
 
   return data;
+}
+
+function revealPaketList() {
+  if (paketSkeleton) {
+    paketSkeleton.classList.add("hidden");
+  }
+
+  if (paketList) {
+    paketList.classList.remove("hidden");
+  }
+}
+
+function setupPaketSkeletonLoader() {
+  if (!paketList) return;
+
+  const images = Array.from(paketList.querySelectorAll(".paket-img"));
+  if (!images.length) {
+    revealPaketList();
+    return;
+  }
+
+  const imageLoadTasks = images.map(
+    (image) =>
+      new Promise((resolve) => {
+        if (image.complete) {
+          resolve();
+          return;
+        }
+
+        const finish = () => resolve();
+        image.addEventListener("load", finish, { once: true });
+        image.addEventListener("error", finish, { once: true });
+      })
+  );
+
+  Promise.all(imageLoadTasks).then(revealPaketList);
 }
 
 function buildCotarQtyFields(paketList) {
@@ -337,3 +375,5 @@ btnWA.addEventListener("click", () => {
 });
 
 window.closePayment = closePayment;
+
+setupPaketSkeletonLoader();

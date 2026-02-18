@@ -149,6 +149,66 @@ input {
   align-items: stretch;
 }
 
+.paket-skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #ececec;
+  border-radius: 10px;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  animation: shimmer 1.2s infinite;
+}
+
+.skeleton-thumb {
+  width: 92px;
+  min-width: 92px;
+  border-radius: 12px;
+  aspect-ratio: 1 / 1;
+}
+
+.skeleton-line {
+  height: 10px;
+  margin-bottom: 8px;
+}
+
+.skeleton-title {
+  width: 70%;
+  height: 16px;
+}
+
+.skeleton-price {
+  width: 45%;
+  margin-bottom: 0;
+}
+
+.skeleton-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.skeleton-qty {
+  width: 24px;
+  height: 14px;
+  border-radius: 6px;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 .paket-img {
   width: 92px;
   min-width: 92px;
@@ -268,6 +328,11 @@ input {
   }
 
   .paket-img {
+    width: 82px;
+    min-width: 82px;
+  }
+
+  .skeleton-thumb {
     width: 82px;
     min-width: 82px;
   }
