@@ -190,13 +190,7 @@ function collectPaketData() {
   return data;
 }
 
-function buildCotarQtyFields(paketList) {
-  const normalizeCode = (value) =>
-    String(value || "")
-      .trim()
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "");
-
+function buildCotarQtyFields() {
   const qtyByCode = {
     COTAR1: 0,
     COTAR2: 0,
@@ -204,45 +198,58 @@ function buildCotarQtyFields(paketList) {
     COTAR4: 0,
   };
 
-  paketList.forEach((item) => {
-    const fromCode = normalizeCode(item.paket);
-    const fromName = normalizeCode(item.namaPaket);
+  document.querySelectorAll(".paket-card").forEach((card) => {
+    const code = String(card.dataset.paket || "").trim().toUpperCase();
+    const qty = Number(card.querySelector(".paket-qty")?.textContent || 0);
 
-    if (qtyByCode[fromCode] !== undefined) {
-      qtyByCode[fromCode] += Number(item.qty) || 0;
-      return;
-    }
-
-    if (fromName.includes("COTAR1")) {
-      qtyByCode.COTAR1 += Number(item.qty) || 0;
-    } else if (fromName.includes("COTAR2")) {
-      qtyByCode.COTAR2 += Number(item.qty) || 0;
-    } else if (fromName.includes("COTAR3")) {
-      qtyByCode.COTAR3 += Number(item.qty) || 0;
-    } else if (fromName.includes("COTAR4")) {
-      qtyByCode.COTAR4 += Number(item.qty) || 0;
+    if (qtyByCode[code] !== undefined) {
+      qtyByCode[code] = qty;
     }
   });
 
+  const totalQty =
+    qtyByCode.COTAR1 +
+    qtyByCode.COTAR2 +
+    qtyByCode.COTAR3 +
+    qtyByCode.COTAR4;
+
   return {
+    cotar1: qtyByCode.COTAR1,
+    cotar2: qtyByCode.COTAR2,
+    cotar3: qtyByCode.COTAR3,
+    cotar4: qtyByCode.COTAR4,
+    cotar_1: qtyByCode.COTAR1,
+    cotar_2: qtyByCode.COTAR2,
+    cotar_3: qtyByCode.COTAR3,
+    cotar_4: qtyByCode.COTAR4,
     cotar1_qty: qtyByCode.COTAR1,
     cotar2_qty: qtyByCode.COTAR2,
     cotar3_qty: qtyByCode.COTAR3,
     cotar4_qty: qtyByCode.COTAR4,
+    cotar_1_qty: qtyByCode.COTAR1,
+    cotar_2_qty: qtyByCode.COTAR2,
+    cotar_3_qty: qtyByCode.COTAR3,
+    cotar_4_qty: qtyByCode.COTAR4,
     cotar1Qty: qtyByCode.COTAR1,
     cotar2Qty: qtyByCode.COTAR2,
     cotar3Qty: qtyByCode.COTAR3,
     cotar4Qty: qtyByCode.COTAR4,
-    cotar_total_qty:
-      qtyByCode.COTAR1 +
-      qtyByCode.COTAR2 +
-      qtyByCode.COTAR3 +
-      qtyByCode.COTAR4,
-    cotarTotalQty:
-      qtyByCode.COTAR1 +
-      qtyByCode.COTAR2 +
-      qtyByCode.COTAR3 +
-      qtyByCode.COTAR4,
+    paketAQty: qtyByCode.COTAR1,
+    paketBQty: qtyByCode.COTAR2,
+    paketCQty: qtyByCode.COTAR3,
+    paketDQty: qtyByCode.COTAR4,
+    paket_a_qty: qtyByCode.COTAR1,
+    paket_b_qty: qtyByCode.COTAR2,
+    paket_c_qty: qtyByCode.COTAR3,
+    paket_d_qty: qtyByCode.COTAR4,
+    a_qty: qtyByCode.COTAR1,
+    b_qty: qtyByCode.COTAR2,
+    c_qty: qtyByCode.COTAR3,
+    d_qty: qtyByCode.COTAR4,
+    cotar_total_qty: totalQty,
+    cotarTotalQty: totalQty,
+    total_paket_qty: totalQty,
+    totalPaketQty: totalQty,
   };
 }
 
@@ -275,7 +282,7 @@ submitButton.addEventListener("click", () => {
     return;
   }
 
-  const cotarQtyFields = buildCotarQtyFields(paket);
+  const cotarQtyFields = buildCotarQtyFields();
   const totalHarga = paket.reduce((sum, item) => sum + item.harga * item.qty, 0);
 
   pendingPayload = {
@@ -284,6 +291,10 @@ submitButton.addEventListener("click", () => {
     tanggal,
     jumlah_orang: jumlahOrang,
     jumlahOrang,
+    jumlahorang: jumlahOrang,
+    jumlah_pax: jumlahOrang,
+    jumlahPax: jumlahOrang,
+    pax: jumlahOrang,
     paket,
     total_harga: totalHarga,
     totalHarga,
@@ -312,7 +323,8 @@ function closePayment() {
   paymentModal.classList.add("hidden");
 }
 
-btnWA.addEventListener("click", () => {
+btnWA.addEventListener("click", (event) => {
+  event.preventDefault();
   if (!pendingPayload) return;
 
   const form = document.createElement("form");
@@ -334,6 +346,11 @@ btnWA.addEventListener("click", () => {
   document.body.appendChild(form);
   form.submit();
   form.remove();
+
+  const waUrl = btnWA.href;
+  if (waUrl) {
+    window.open(waUrl, "_blank", "noopener");
+  }
 });
 
 window.closePayment = closePayment;
