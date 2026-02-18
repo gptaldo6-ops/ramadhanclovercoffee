@@ -225,10 +225,22 @@ function buildCotarQtyFields(paketList) {
   });
 
   return {
+    cotar1: qtyByCode.COTAR1,
+    cotar2: qtyByCode.COTAR2,
+    cotar3: qtyByCode.COTAR3,
+    cotar4: qtyByCode.COTAR4,
+    cotar_1: qtyByCode.COTAR1,
+    cotar_2: qtyByCode.COTAR2,
+    cotar_3: qtyByCode.COTAR3,
+    cotar_4: qtyByCode.COTAR4,
     cotar1_qty: qtyByCode.COTAR1,
     cotar2_qty: qtyByCode.COTAR2,
     cotar3_qty: qtyByCode.COTAR3,
     cotar4_qty: qtyByCode.COTAR4,
+    cotar_1_qty: qtyByCode.COTAR1,
+    cotar_2_qty: qtyByCode.COTAR2,
+    cotar_3_qty: qtyByCode.COTAR3,
+    cotar_4_qty: qtyByCode.COTAR4,
     cotar1Qty: qtyByCode.COTAR1,
     cotar2Qty: qtyByCode.COTAR2,
     cotar3Qty: qtyByCode.COTAR3,
@@ -239,6 +251,16 @@ function buildCotarQtyFields(paketList) {
       qtyByCode.COTAR3 +
       qtyByCode.COTAR4,
     cotarTotalQty:
+      qtyByCode.COTAR1 +
+      qtyByCode.COTAR2 +
+      qtyByCode.COTAR3 +
+      qtyByCode.COTAR4,
+    total_paket_qty:
+      qtyByCode.COTAR1 +
+      qtyByCode.COTAR2 +
+      qtyByCode.COTAR3 +
+      qtyByCode.COTAR4,
+    totalPaketQty:
       qtyByCode.COTAR1 +
       qtyByCode.COTAR2 +
       qtyByCode.COTAR3 +
