@@ -190,10 +190,7 @@ function collectPaketData() {
   return data;
 }
 
-function collectSummaryData() {
-  const summaryItems = Array.from(
-    summaryContainer.querySelectorAll(".summary-item strong")
-  );
+function buildCotarQtyFields() {
   const qtyByCode = {
     COTAR1: 0,
     COTAR2: 0,
@@ -201,71 +198,14 @@ function collectSummaryData() {
     COTAR4: 0,
   };
 
-  summaryItems.forEach((item) => {
-    const text = item.textContent || "";
-    const match = text.match(/cotar\s*(\d)\s*[×x]\s*(\d+)/i);
-    if (!match) return;
+  document.querySelectorAll(".paket-card").forEach((card) => {
+    const code = String(card.dataset.paket || "").trim().toUpperCase();
+    const qty = Number(card.querySelector(".paket-qty")?.textContent || 0);
 
-    const code = `COTAR${match[1]}`;
     if (qtyByCode[code] !== undefined) {
-      qtyByCode[code] += Number(match[2]) || 0;
+      qtyByCode[code] = qty;
     }
   });
-
-  const totalQty =
-    qtyByCode.COTAR1 +
-    qtyByCode.COTAR2 +
-    qtyByCode.COTAR3 +
-    qtyByCode.COTAR4;
-
-  return {
-    qtyByCode,
-    totalQty,
-    html: summaryContainer.innerHTML,
-    text: summaryContainer.innerText.trim(),
-  };
-}
-
-function buildCotarQtyFields(summaryData, paketList) {
-  const normalizeCode = (value) =>
-    String(value || "")
-      .trim()
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "");
-
-  const qtyByCodeFromPaket = {
-    COTAR1: 0,
-    COTAR2: 0,
-    COTAR3: 0,
-    COTAR4: 0,
-  };
-
-  paketList.forEach((item) => {
-    const fromCode = normalizeCode(item.paket);
-    const fromName = normalizeCode(item.namaPaket);
-
-    if (qtyByCodeFromPaket[fromCode] !== undefined) {
-      qtyByCodeFromPaket[fromCode] += Number(item.qty) || 0;
-      return;
-    }
-
-    if (fromName.includes("COTAR1")) {
-      qtyByCodeFromPaket.COTAR1 += Number(item.qty) || 0;
-    } else if (fromName.includes("COTAR2")) {
-      qtyByCodeFromPaket.COTAR2 += Number(item.qty) || 0;
-    } else if (fromName.includes("COTAR3")) {
-      qtyByCodeFromPaket.COTAR3 += Number(item.qty) || 0;
-    } else if (fromName.includes("COTAR4")) {
-      qtyByCodeFromPaket.COTAR4 += Number(item.qty) || 0;
-    }
-  });
-
-  const qtyByCode = {
-    COTAR1: summaryData.qtyByCode.COTAR1 || qtyByCodeFromPaket.COTAR1,
-    COTAR2: summaryData.qtyByCode.COTAR2 || qtyByCodeFromPaket.COTAR2,
-    COTAR3: summaryData.qtyByCode.COTAR3 || qtyByCodeFromPaket.COTAR3,
-    COTAR4: summaryData.qtyByCode.COTAR4 || qtyByCodeFromPaket.COTAR4,
-  };
 
   const totalQty =
     qtyByCode.COTAR1 +
@@ -294,7 +234,6 @@ function buildCotarQtyFields(summaryData, paketList) {
     cotar2Qty: qtyByCode.COTAR2,
     cotar3Qty: qtyByCode.COTAR3,
     cotar4Qty: qtyByCode.COTAR4,
-    // alias lama (format A-D) agar kompatibel dengan Apps Script versi sebelumnya
     paketAQty: qtyByCode.COTAR1,
     paketBQty: qtyByCode.COTAR2,
     paketCQty: qtyByCode.COTAR3,
@@ -343,8 +282,7 @@ submitButton.addEventListener("click", () => {
     return;
   }
 
-  const summaryData = collectSummaryData();
-  const cotarQtyFields = buildCotarQtyFields(summaryData, paket);
+  const cotarQtyFields = buildCotarQtyFields();
   const totalHarga = paket.reduce((sum, item) => sum + item.harga * item.qty, 0);
 
   pendingPayload = {
