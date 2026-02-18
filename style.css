@@ -129,12 +129,29 @@ input {
   border-radius: 14px;
   padding: 12px;
   margin-bottom: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.paket-img {
+  width: 92px;
+  min-width: 92px;
+  border-radius: 12px;
+  object-fit: cover;
+  aspect-ratio: 1 / 1;
 }
 
 .paket-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.paket-info {
+  flex: 1;
 }
 
 
@@ -227,4 +244,16 @@ input {
   padding: 10px;
   border: none;
   border-radius: 10px;
+}
+
+
+@media (max-width: 420px) {
+  .paket-card {
+    gap: 10px;
+  }
+
+  .paket-img {
+    width: 82px;
+    min-width: 82px;
+  }
 }
