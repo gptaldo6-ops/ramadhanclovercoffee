@@ -13,6 +13,10 @@ const submitButton = document.getElementById("btnSubmit");
 const paymentModal = document.getElementById("paymentModal");
 const payTotal = document.getElementById("payTotal");
 const btnWA = document.getElementById("btnWA");
+const menuPreviewModal = document.getElementById("menuPreviewModal");
+const previewImage = document.getElementById("previewImage");
+const previewCaption = document.getElementById("previewCaption");
+const previewClose = document.getElementById("previewClose");
 const paketList = document.getElementById("paketList");
 const paketSkeleton = document.getElementById("paketSkeleton");
 
@@ -228,6 +232,71 @@ function setupPaketSkeletonLoader() {
   Promise.all(imageLoadTasks).then(revealPaketList);
 }
 
+function openMenuPreview(imageElement) {
+  if (!menuPreviewModal || !previewImage || !previewCaption) return;
+
+  previewImage.src = imageElement.src;
+  previewImage.alt = imageElement.alt;
+  previewCaption.textContent = imageElement.alt;
+
+  menuPreviewModal.classList.remove("hidden");
+  menuPreviewModal.classList.add("modal-opening");
+}
+
+function closeMenuPreview() {
+  if (!menuPreviewModal) return;
+  menuPreviewModal.classList.add("hidden");
+  menuPreviewModal.classList.remove("modal-opening");
+}
+
+function setupImagePreviewPopup() {
+  document.querySelectorAll("#paketList .paket-img").forEach((imageElement) => {
+    imageElement.addEventListener("click", () => openMenuPreview(imageElement));
+  });
+
+  if (previewClose) {
+    previewClose.addEventListener("click", closeMenuPreview);
+  }
+
+  if (menuPreviewModal) {
+    menuPreviewModal.addEventListener("click", (event) => {
+      if (event.target === menuPreviewModal) {
+        closeMenuPreview();
+      }
+    });
+  }
+}
+
+function buildWhatsappMessage({ resvId, nama, tanggal, total }) {
+  return [
+    "Halo, saya sudah melakukan pembayaran QRIS.",
+    "",
+    `ID Reservasi: ${resvId}`,
+    `Nama: ${nama}`,
+    `Tanggal: ${tanggal}`,
+    `Total: Rp${formatRupiah(total)}`,
+    "",
+    "Berikut saya lampirkan bukti transfer.",
+    "Terima kasih.",
+  ].join("\n");
+}
+
+function startWaButtonLoading() {
+  btnWA.classList.add("loading");
+  btnWA.setAttribute("aria-disabled", "true");
+  btnWA.dataset.locked = "1";
+
+  const originalText = "Kirim Bukti via WhatsApp";
+  btnWA.textContent = "Mengirim...";
+
+  setTimeout(() => {
+    btnWA.classList.remove("loading");
+    btnWA.removeAttribute("aria-disabled");
+    btnWA.dataset.locked = "0";
+    btnWA.textContent = originalText;
+  }, 7000);
+}
+
 function buildCotarQtyFields(paketList) {
   const normalizeCode = (value) =>
     String(value || "")
@@ -341,17 +410,31 @@ function showPaymentPopup({ resvId, nama, tanggal, total }) {
 
   btnWA.href =
     "https://wa.me/6285156076002?text=" +
-    encodeURIComponent(`Kode: ${resvId}\nNama: ${nama}\nTanggal: ${tanggal}`);
+    encodeURIComponent(buildWhatsappMessage({ resvId, nama, tanggal, total }));
+
+  btnWA.classList.remove("loading");
+  btnWA.removeAttribute("aria-disabled");
+  btnWA.dataset.locked = "0";
+  btnWA.textContent = "Kirim Bukti via WhatsApp";
 
   paymentModal.classList.remove("hidden");
+  paymentModal.classList.add("modal-opening");
 }
 
 function closePayment() {
   paymentModal.classList.add("hidden");
+  paymentModal.classList.remove("modal-opening");
 }
 
-btnWA.addEventListener("click", () => {
+btnWA.addEventListener("click", (event) => {
+  if (btnWA.dataset.locked === "1") {
+    event.preventDefault();
+    return;
+  }
+
   if (!pendingPayload) return;
+
+  startWaButtonLoading();
 
   const form = document.createElement("form");
   form.method = "POST";
@@ -377,3 +460,4 @@ btnWA.addEventListener("click", () => {
 window.closePayment = closePayment;
 
 setupPaketSkeletonLoader();
+setupImagePreviewPopup();

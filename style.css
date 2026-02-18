@@ -215,6 +215,7 @@ input {
   border-radius: 12px;
   object-fit: cover;
   aspect-ratio: 1 / 1;
+  cursor: zoom-in;
 }
 
 .paket-header {
@@ -283,6 +284,11 @@ input {
   padding: 20px;
   border-radius: 16px;
   text-align: center;
+  animation: popupIn 0.25s ease;
+}
+
+.modal.modal-opening {
+  animation: fadeIn 0.25s ease;
 }
 
 .total {
@@ -313,12 +319,89 @@ input {
   margin-top: 12px;
 }
 
+.btn-wa.loading,
+.btn-wa[aria-disabled="true"] {
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.btn-wa.loading::after {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: text-bottom;
+}
+
 .btn-close {
   margin-top: 8px;
   width: 100%;
   padding: 10px;
   border: none;
   border-radius: 10px;
+}
+
+.modal-content-preview {
+  max-width: 420px;
+  padding: 16px;
+  position: relative;
+}
+
+.preview-image {
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+}
+
+.preview-caption {
+  margin: 12px 0 4px;
+  font-size: 13px;
+  color: #666;
+}
+
+.preview-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+}
+
+@keyframes popupIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 
