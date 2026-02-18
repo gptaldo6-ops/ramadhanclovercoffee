@@ -200,7 +200,8 @@ function buildCotarQtyFields() {
 
   document.querySelectorAll(".paket-card").forEach((card) => {
     const code = String(card.dataset.paket || "").trim().toUpperCase();
-    const qty = Number(card.querySelector(".paket-qty")?.textContent || 0);
+    const qtyElement = card.querySelector(".paket-qty");
+    const qty = Number(qtyElement ? qtyElement.textContent : 0);
 
     if (qtyByCode[code] !== undefined) {
       qtyByCode[code] = qty;
@@ -253,7 +254,8 @@ function buildCotarQtyFields() {
   };
 }
 
-submitButton.addEventListener("click", () => {
+if (submitButton) {
+  submitButton.addEventListener("click", () => {
   const nama = document.getElementById("nama").value.trim();
   const whatsapp = document.getElementById("whatsapp").value.trim();
   const tanggal = tanggalInput.value;
@@ -311,7 +313,8 @@ submitButton.addEventListener("click", () => {
     tanggal,
     total: totalHarga,
   });
-});
+  });
+}
 
 function showPaymentPopup({ resvId, nama, tanggal, total }) {
   payTotal.textContent = formatRupiah(total);
@@ -327,7 +330,8 @@ function closePayment() {
   paymentModal.classList.add("hidden");
 }
 
-btnWA.addEventListener("click", (event) => {
+if (btnWA) {
+  btnWA.addEventListener("click", (event) => {
   event.preventDefault();
   if (!pendingPayload) return;
 
@@ -355,6 +359,7 @@ btnWA.addEventListener("click", (event) => {
   if (waUrl) {
     window.open(waUrl, "_blank", "noopener");
   }
-});
+  });
+}
 
 window.closePayment = closePayment;
