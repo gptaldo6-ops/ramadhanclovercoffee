@@ -1,5 +1,7 @@
 let pendingPayload = null;
 
+const ADMIN_SETTINGS_KEY = "ramadhan_admin_settings";
+
 const API_URL =
   "https://script.google.com/macros/s/AKfycbxJWjkbqXoxGfxZqZdq3O6RHqtmJ-cfp_PNNanwAfKNZBbi6XgcUxr6NE6ZepUTa5Xw/exec";
 
@@ -19,6 +21,27 @@ const previewCaption = document.getElementById("previewCaption");
 const previewClose = document.getElementById("previewClose");
 const paketList = document.getElementById("paketList");
 const paketSkeleton = document.getElementById("paketSkeleton");
+
+function getAdminSettings() {
+  try {
+    const raw = localStorage.getItem(ADMIN_SETTINGS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return {
+      siteClosed: Boolean(parsed.siteClosed),
+      closedDates: Array.isArray(parsed.closedDates) ? parsed.closedDates : [],
+      maxPeopleByDate:
+        parsed.maxPeopleByDate && typeof parsed.maxPeopleByDate === "object"
+          ? parsed.maxPeopleByDate
+          : {},
+    };
+  } catch {
+    return {
+      siteClosed: false,
+      closedDates: [],
+      maxPeopleByDate: {},
+    };
+  }
+}
 
 function toDateString(dateObj) {
   const year = dateObj.getFullYear();
@@ -70,6 +93,7 @@ function formatRupiah(value) {
 
 function applyBookingDateRange() {
   const { min, max } = getBookingDateRange();
+  const adminSettings = getAdminSettings();
   const currentValue = tanggalInput.value;
 
   tanggalGrid.innerHTML = "";
@@ -87,6 +111,14 @@ function applyBookingDateRange() {
 
     const labelDay = formatDisplayDay(cursor);
     const labelDate = formatDisplayDate(cursor);
+    const closedByAdmin =
+      adminSettings.siteClosed || adminSettings.closedDates.includes(value);
+
+    if (closedByAdmin) {
+      button.classList.add("disabled");
+      button.disabled = true;
+    }
+
     button.innerHTML = `<span>${labelDay}</span><strong>${labelDate}</strong>`;
 
     if (value === currentValue) {
@@ -95,6 +127,8 @@ function applyBookingDateRange() {
     }
 
     button.addEventListener("click", () => {
+      if (closedByAdmin) return;
+
       tanggalInput.value = value;
       tanggalTrigger.textContent = `${labelDay}, ${labelDate}`;
 
@@ -354,10 +388,16 @@ function buildCotarQtyFields(paketList) {
 }
 
 submitButton.addEventListener("click", () => {
+  const adminSettings = getAdminSettings();
   const nama = document.getElementById("nama").value.trim();
   const whatsapp = document.getElementById("whatsapp").value.trim();
   const tanggal = tanggalInput.value;
   const jumlahOrang = Number(jumlahOrangInput.value);
+
+  if (adminSettings.siteClosed) {
+    alert("Reservasi sedang ditutup sementara oleh admin");
+    return;
+  }
 
   if (!nama || !whatsapp || !tanggal || jumlahOrang <= 0) {
     alert("Lengkapi data terlebih dahulu");
@@ -367,6 +407,17 @@ submitButton.addEventListener("click", () => {
   const { min, max } = getBookingDateRange();
   if (tanggal < min || tanggal > max) {
     alert(`Tanggal reservasi hanya bisa dipilih dari ${min} sampai ${max}`);
+    return;
+  }
+
+  if (adminSettings.closedDates.includes(tanggal)) {
+    alert("Tanggal yang dipilih sedang ditutup oleh admin");
+    return;
+  }
+
+  const maxPeople = Number(adminSettings.maxPeopleByDate?.[tanggal]);
+  if (Number.isFinite(maxPeople) && maxPeople > 0 && jumlahOrang > maxPeople) {
+    alert(`Maksimal jumlah orang untuk tanggal ini adalah ${maxPeople}`);
     return;
   }
 
