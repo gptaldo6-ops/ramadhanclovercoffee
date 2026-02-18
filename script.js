@@ -190,14 +190,50 @@ function collectPaketData() {
   return data;
 }
 
-function buildCotarQtyFields(paketList) {
+function collectSummaryData() {
+  const summaryItems = Array.from(
+    summaryContainer.querySelectorAll(".summary-item strong")
+  );
+  const qtyByCode = {
+    COTAR1: 0,
+    COTAR2: 0,
+    COTAR3: 0,
+    COTAR4: 0,
+  };
+
+  summaryItems.forEach((item) => {
+    const text = item.textContent || "";
+    const match = text.match(/cotar\s*(\d)\s*[×x]\s*(\d+)/i);
+    if (!match) return;
+
+    const code = `COTAR${match[1]}`;
+    if (qtyByCode[code] !== undefined) {
+      qtyByCode[code] += Number(match[2]) || 0;
+    }
+  });
+
+  const totalQty =
+    qtyByCode.COTAR1 +
+    qtyByCode.COTAR2 +
+    qtyByCode.COTAR3 +
+    qtyByCode.COTAR4;
+
+  return {
+    qtyByCode,
+    totalQty,
+    html: summaryContainer.innerHTML,
+    text: summaryContainer.innerText.trim(),
+  };
+}
+
+function buildCotarQtyFields(summaryData, paketList) {
   const normalizeCode = (value) =>
     String(value || "")
       .trim()
       .toUpperCase()
       .replace(/[^A-Z0-9]/g, "");
 
-  const qtyByCode = {
+  const qtyByCodeFromPaket = {
     COTAR1: 0,
     COTAR2: 0,
     COTAR3: 0,
@@ -208,41 +244,73 @@ function buildCotarQtyFields(paketList) {
     const fromCode = normalizeCode(item.paket);
     const fromName = normalizeCode(item.namaPaket);
 
-    if (qtyByCode[fromCode] !== undefined) {
-      qtyByCode[fromCode] += Number(item.qty) || 0;
+    if (qtyByCodeFromPaket[fromCode] !== undefined) {
+      qtyByCodeFromPaket[fromCode] += Number(item.qty) || 0;
       return;
     }
 
     if (fromName.includes("COTAR1")) {
-      qtyByCode.COTAR1 += Number(item.qty) || 0;
+      qtyByCodeFromPaket.COTAR1 += Number(item.qty) || 0;
     } else if (fromName.includes("COTAR2")) {
-      qtyByCode.COTAR2 += Number(item.qty) || 0;
+      qtyByCodeFromPaket.COTAR2 += Number(item.qty) || 0;
     } else if (fromName.includes("COTAR3")) {
-      qtyByCode.COTAR3 += Number(item.qty) || 0;
+      qtyByCodeFromPaket.COTAR3 += Number(item.qty) || 0;
     } else if (fromName.includes("COTAR4")) {
-      qtyByCode.COTAR4 += Number(item.qty) || 0;
+      qtyByCodeFromPaket.COTAR4 += Number(item.qty) || 0;
     }
   });
 
+  const qtyByCode = {
+    COTAR1: summaryData.qtyByCode.COTAR1 || qtyByCodeFromPaket.COTAR1,
+    COTAR2: summaryData.qtyByCode.COTAR2 || qtyByCodeFromPaket.COTAR2,
+    COTAR3: summaryData.qtyByCode.COTAR3 || qtyByCodeFromPaket.COTAR3,
+    COTAR4: summaryData.qtyByCode.COTAR4 || qtyByCodeFromPaket.COTAR4,
+  };
+
+  const totalQty =
+    qtyByCode.COTAR1 +
+    qtyByCode.COTAR2 +
+    qtyByCode.COTAR3 +
+    qtyByCode.COTAR4;
+
   return {
+    cotar1: qtyByCode.COTAR1,
+    cotar2: qtyByCode.COTAR2,
+    cotar3: qtyByCode.COTAR3,
+    cotar4: qtyByCode.COTAR4,
+    cotar_1: qtyByCode.COTAR1,
+    cotar_2: qtyByCode.COTAR2,
+    cotar_3: qtyByCode.COTAR3,
+    cotar_4: qtyByCode.COTAR4,
     cotar1_qty: qtyByCode.COTAR1,
     cotar2_qty: qtyByCode.COTAR2,
     cotar3_qty: qtyByCode.COTAR3,
     cotar4_qty: qtyByCode.COTAR4,
+    cotar_1_qty: qtyByCode.COTAR1,
+    cotar_2_qty: qtyByCode.COTAR2,
+    cotar_3_qty: qtyByCode.COTAR3,
+    cotar_4_qty: qtyByCode.COTAR4,
     cotar1Qty: qtyByCode.COTAR1,
     cotar2Qty: qtyByCode.COTAR2,
     cotar3Qty: qtyByCode.COTAR3,
     cotar4Qty: qtyByCode.COTAR4,
-    cotar_total_qty:
-      qtyByCode.COTAR1 +
-      qtyByCode.COTAR2 +
-      qtyByCode.COTAR3 +
-      qtyByCode.COTAR4,
-    cotarTotalQty:
-      qtyByCode.COTAR1 +
-      qtyByCode.COTAR2 +
-      qtyByCode.COTAR3 +
-      qtyByCode.COTAR4,
+    // alias lama (format A-D) agar kompatibel dengan Apps Script versi sebelumnya
+    paketAQty: qtyByCode.COTAR1,
+    paketBQty: qtyByCode.COTAR2,
+    paketCQty: qtyByCode.COTAR3,
+    paketDQty: qtyByCode.COTAR4,
+    paket_a_qty: qtyByCode.COTAR1,
+    paket_b_qty: qtyByCode.COTAR2,
+    paket_c_qty: qtyByCode.COTAR3,
+    paket_d_qty: qtyByCode.COTAR4,
+    a_qty: qtyByCode.COTAR1,
+    b_qty: qtyByCode.COTAR2,
+    c_qty: qtyByCode.COTAR3,
+    d_qty: qtyByCode.COTAR4,
+    cotar_total_qty: totalQty,
+    cotarTotalQty: totalQty,
+    total_paket_qty: totalQty,
+    totalPaketQty: totalQty,
   };
 }
 
@@ -275,7 +343,8 @@ submitButton.addEventListener("click", () => {
     return;
   }
 
-  const cotarQtyFields = buildCotarQtyFields(paket);
+  const summaryData = collectSummaryData();
+  const cotarQtyFields = buildCotarQtyFields(summaryData, paket);
   const totalHarga = paket.reduce((sum, item) => sum + item.harga * item.qty, 0);
 
   pendingPayload = {
@@ -284,7 +353,15 @@ submitButton.addEventListener("click", () => {
     tanggal,
     jumlah_orang: jumlahOrang,
     jumlahOrang,
+    jumlahorang: jumlahOrang,
+    jumlah_pax: jumlahOrang,
+    jumlahPax: jumlahOrang,
+    pax: jumlahOrang,
     paket,
+    ringkasan_pesanan: summaryData.text,
+    ringkasanPesanan: summaryData.text,
+    order_summary: summaryData.html,
+    orderSummary: summaryData.html,
     total_harga: totalHarga,
     totalHarga,
     ...cotarQtyFields,
@@ -312,7 +389,8 @@ function closePayment() {
   paymentModal.classList.add("hidden");
 }
 
-btnWA.addEventListener("click", () => {
+btnWA.addEventListener("click", (event) => {
+  event.preventDefault();
   if (!pendingPayload) return;
 
   const form = document.createElement("form");
@@ -334,6 +412,11 @@ btnWA.addEventListener("click", () => {
   document.body.appendChild(form);
   form.submit();
   form.remove();
+
+  const waUrl = btnWA.href;
+  if (waUrl) {
+    window.open(waUrl, "_blank", "noopener");
+  }
 });
 
 window.closePayment = closePayment;
