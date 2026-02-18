@@ -32,6 +32,15 @@ section {
   padding: 14px;
   margin-bottom: 14px;
   border-radius: 14px;
+  position: relative;
+}
+
+.section-tanggal {
+  z-index: 30;
+}
+
+.section-paket {
+  z-index: 10;
 }
 
 h3 {
@@ -79,7 +88,7 @@ input {
   border-radius: 12px;
   padding: 10px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-  z-index: 20;
+  z-index: 40;
 }
 
 .tanggal-grid {
