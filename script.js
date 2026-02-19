@@ -91,6 +91,7 @@ function formatRupiah(value) {
   return value.toLocaleString("id-ID");
 }
 
+
 function applyBookingDateRange() {
   const { min, max } = getBookingDateRange();
   const adminSettings = getAdminSettings();
@@ -152,6 +153,7 @@ function applyBookingDateRange() {
 function updateSummary() {
   let html = "";
   let hasData = false;
+  let totalSubtotal = 0;
 
   document.querySelectorAll("#paketList .paket-card").forEach((card) => {
     const paketName = card.querySelector("strong").textContent;
@@ -162,15 +164,23 @@ function updateSummary() {
     if (qty <= 0) return;
 
     hasData = true;
+    totalSubtotal += harga * qty;
     html += `
       <div class="summary-item">
         <strong>${paketName} × ${qty}</strong><br/>
         <span class="summary-meta">${paketInfo}</span><br/>
         <span class="summary-meta">Rp${formatRupiah(harga)} / paket</span><br/>
-        <span>Subtotal: Rp${formatRupiah(harga * qty)}</span>
       </div>
     `;
   });
+
+  if (hasData) {
+    html += `
+      <div class="summary-item">
+        <strong>Subtotal Semua Pesanan: Rp${formatRupiah(totalSubtotal)}</strong>
+      </div>
+    `;
+  }
 
   summaryContainer.innerHTML = hasData ? html : "<p>Belum ada paket dipilih</p>";
 }
@@ -301,11 +311,10 @@ function setupImagePreviewPopup() {
   }
 }
 
-function buildWhatsappMessage({ resvId, nama, tanggal, total }) {
+function buildWhatsappMessage({ nama, tanggal, total }) {
   return [
     "Halo, saya sudah melakukan pembayaran QRIS.",
     "",
-    `ID Reservasi: ${resvId}`,
     `Nama: ${nama}`,
     `Tanggal: ${tanggal}`,
     `Total: Rp${formatRupiah(total)}`,
@@ -449,19 +458,18 @@ submitButton.addEventListener("click", () => {
   };
 
   showPaymentPopup({
-    resvId: "R-TEST-01",
     nama,
     tanggal,
     total: totalHarga,
   });
 });
 
-function showPaymentPopup({ resvId, nama, tanggal, total }) {
+function showPaymentPopup({ nama, tanggal, total }) {
   payTotal.textContent = formatRupiah(total);
 
   btnWA.href =
-    "https://wa.me/6285156076002?text=" +
-    encodeURIComponent(buildWhatsappMessage({ resvId, nama, tanggal, total }));
+    "https://wa.me/6285121396083?text=" +
+    encodeURIComponent(buildWhatsappMessage({ nama, tanggal, total }));
 
   btnWA.classList.remove("loading");
   btnWA.removeAttribute("aria-disabled");
