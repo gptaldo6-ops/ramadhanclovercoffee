@@ -91,6 +91,7 @@ function formatRupiah(value) {
   return value.toLocaleString("id-ID");
 }
 
+
 function applyBookingDateRange() {
   const { min, max } = getBookingDateRange();
   const adminSettings = getAdminSettings();
@@ -310,11 +311,10 @@ function setupImagePreviewPopup() {
   }
 }
 
-function buildWhatsappMessage({ resvId, nama, tanggal, total }) {
+function buildWhatsappMessage({ nama, tanggal, total }) {
   return [
     "Halo, saya sudah melakukan pembayaran QRIS.",
     "",
-    `ID Reservasi: ${resvId}`,
     `Nama: ${nama}`,
     `Tanggal: ${tanggal}`,
     `Total: Rp${formatRupiah(total)}`,
@@ -458,19 +458,18 @@ submitButton.addEventListener("click", () => {
   };
 
   showPaymentPopup({
-    resvId: "R-TEST-01",
     nama,
     tanggal,
     total: totalHarga,
   });
 });
 
-function showPaymentPopup({ resvId, nama, tanggal, total }) {
+function showPaymentPopup({ nama, tanggal, total }) {
   payTotal.textContent = formatRupiah(total);
 
   btnWA.href =
-    "https://wa.me/6285156076002?text=" +
-    encodeURIComponent(buildWhatsappMessage({ resvId, nama, tanggal, total }));
+    "https://wa.me/6285121396083?text=" +
+    encodeURIComponent(buildWhatsappMessage({ nama, tanggal, total }));
 
   btnWA.classList.remove("loading");
   btnWA.removeAttribute("aria-disabled");
