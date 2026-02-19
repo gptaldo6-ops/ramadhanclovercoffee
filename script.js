@@ -152,6 +152,7 @@ function applyBookingDateRange() {
 function updateSummary() {
   let html = "";
   let hasData = false;
+  let totalSubtotal = 0;
 
   document.querySelectorAll("#paketList .paket-card").forEach((card) => {
     const paketName = card.querySelector("strong").textContent;
@@ -162,15 +163,23 @@ function updateSummary() {
     if (qty <= 0) return;
 
     hasData = true;
+    totalSubtotal += harga * qty;
     html += `
       <div class="summary-item">
         <strong>${paketName} × ${qty}</strong><br/>
         <span class="summary-meta">${paketInfo}</span><br/>
         <span class="summary-meta">Rp${formatRupiah(harga)} / paket</span><br/>
-        <span>Subtotal: Rp${formatRupiah(harga * qty)}</span>
       </div>
     `;
   });
+
+  if (hasData) {
+    html += `
+      <div class="summary-item">
+        <strong>Subtotal Semua Pesanan: Rp${formatRupiah(totalSubtotal)}</strong>
+      </div>
+    `;
+  }
 
   summaryContainer.innerHTML = hasData ? html : "<p>Belum ada paket dipilih</p>";
 }
