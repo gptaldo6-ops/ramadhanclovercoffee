@@ -2,6 +2,53 @@ const ADMIN_AUTH_KEY = "ramadhan_admin_auth";
 const ADMIN_SETTINGS_KEY = "ramadhan_admin_settings";
 const RESERVATION_HISTORY_KEY = "ramadhan_reservation_history";
 
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbxJWjkbqXoxGfxZqZdq3O6RHqtmJ-cfp_PNNanwAfKNZBbi6XgcUxr6NE6ZepUTa5Xw/exec";
+const ADMIN_SETTINGS_ACTION_GET = "getAdminSettings";
+const ADMIN_SETTINGS_ACTION_SET = "setAdminSettings";
+
+function normalizeAdminSettings(parsed) {
+  return {
+    siteClosed: Boolean(parsed.siteClosed),
+    closedDates: Array.isArray(parsed.closedDates) ? parsed.closedDates : [],
+    manualReservedByDate: parsed.manualReservedByDate && typeof parsed.manualReservedByDate === "object" ? parsed.manualReservedByDate : {},
+    maxPeopleByDate: parsed.maxPeopleByDate && typeof parsed.maxPeopleByDate === "object" ? parsed.maxPeopleByDate : {},
+  };
+}
+
+async function fetchSharedAdminSettings() {
+  const response = await fetch(`${API_URL}?action=${ADMIN_SETTINGS_ACTION_GET}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gagal mengambil pengaturan admin (${response.status})`);
+  }
+
+  const payload = await response.json();
+  return normalizeAdminSettings(payload && typeof payload === "object" ? payload : {});
+}
+
+async function saveSharedAdminSettings(settings) {
+  const body = new URLSearchParams({
+    action: ADMIN_SETTINGS_ACTION_SET,
+    settings: JSON.stringify(settings),
+  });
+
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+    },
+    body,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gagal menyimpan pengaturan admin (${response.status})`);
+  }
+}
+
 const TABLE_CAPACITIES = [10, 10, 8, 6, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 2, 2];
 const TOTAL_SEATS = TABLE_CAPACITIES.reduce((sum, seats) => sum + seats, 0);
 
@@ -141,12 +188,7 @@ function getAdminSettings() {
   try {
     const raw = localStorage.getItem(ADMIN_SETTINGS_KEY);
     const parsed = raw ? JSON.parse(raw) : {};
-    return {
-      siteClosed: Boolean(parsed.siteClosed),
-      closedDates: Array.isArray(parsed.closedDates) ? parsed.closedDates : [],
-      manualReservedByDate: parsed.manualReservedByDate && typeof parsed.manualReservedByDate === "object" ? parsed.manualReservedByDate : {},
-      maxPeopleByDate: parsed.maxPeopleByDate && typeof parsed.maxPeopleByDate === "object" ? parsed.maxPeopleByDate : {},
-    };
+    return normalizeAdminSettings(parsed);
   } catch {
     return {
       siteClosed: false,
@@ -193,9 +235,17 @@ function getReservedCountForDate(dateKey, groupsByDate, settings) {
   return parties.reduce((sum, p) => sum + p, 0);
 }
 
-function showDashboard() {
+async function showDashboard() {
   loginSection.classList.add("hidden");
   dashboardSection.classList.remove("hidden");
+
+  try {
+    const remoteSettings = await fetchSharedAdminSettings();
+    setAdminSettings(remoteSettings);
+  } catch (error) {
+    console.warn("Gagal sinkron dari server, memakai cache lokal:", error);
+  }
+
   renderAdminUI();
 }
 
@@ -334,10 +384,10 @@ btnLogin.addEventListener("click", async () => {
 
   localStorage.setItem(ADMIN_AUTH_KEY, "1");
   adminPassword.value = "";
-  showDashboard();
+  void showDashboard();
 });
 
-btnSave.addEventListener("click", () => {
+btnSave.addEventListener("click", async () => {
   const current = getAdminSettings();
   const manualReservedByDate = { ...(current.manualReservedByDate || {}) };
   const maxPeopleByDate = { ...(current.maxPeopleByDate || {}) };
@@ -368,8 +418,16 @@ btnSave.addEventListener("click", () => {
   };
 
   setAdminSettings(updated);
+
+  try {
+    await saveSharedAdminSettings(updated);
+    alert("Pengaturan admin disimpan & dipublish ke semua perangkat");
+  } catch (error) {
+    console.warn("Simpan ke server gagal:", error);
+    alert("Pengaturan tersimpan lokal, tapi gagal publish ke server. Cek Apps Script.");
+  }
+
   renderAdminUI();
-  alert("Pengaturan admin disimpan");
 });
 
 btnLogout.addEventListener("click", () => {
@@ -378,7 +436,7 @@ btnLogout.addEventListener("click", () => {
 });
 
 if (localStorage.getItem(ADMIN_AUTH_KEY) === "1") {
-  showDashboard();
+  void showDashboard();
 } else {
   showLogin();
 }

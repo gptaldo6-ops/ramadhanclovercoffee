@@ -5,6 +5,47 @@ const ADMIN_SETTINGS_KEY = "ramadhan_admin_settings";
 const API_URL =
   "https://script.google.com/macros/s/AKfycbxJWjkbqXoxGfxZqZdq3O6RHqtmJ-cfp_PNNanwAfKNZBbi6XgcUxr6NE6ZepUTa5Xw/exec";
 
+const ADMIN_SETTINGS_ACTION_GET = "getAdminSettings";
+
+async function fetchSharedAdminSettings() {
+  const response = await fetch(`${API_URL}?action=${ADMIN_SETTINGS_ACTION_GET}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gagal mengambil pengaturan admin (${response.status})`);
+  }
+
+  const payload = await response.json();
+  return payload && typeof payload === "object" ? payload : {};
+}
+
+function normalizeAdminSettings(parsed) {
+  return {
+    siteClosed: Boolean(parsed.siteClosed),
+    closedDates: Array.isArray(parsed.closedDates)
+      ? parsed.closedDates.filter((dateValue) => typeof dateValue === "string")
+      : [],
+    maxPeopleByDate:
+      parsed.maxPeopleByDate && typeof parsed.maxPeopleByDate === "object"
+        ? parsed.maxPeopleByDate
+        : {},
+  };
+}
+
+async function syncAdminSettingsFromServer() {
+  try {
+    const remote = await fetchSharedAdminSettings();
+    const normalized = normalizeAdminSettings(remote);
+    localStorage.setItem(ADMIN_SETTINGS_KEY, JSON.stringify(normalized));
+    applyBookingDateRange();
+    renderMaintenanceBanner();
+  } catch (error) {
+    console.warn("Sinkronisasi pengaturan admin gagal:", error);
+  }
+}
+
 const tanggalInput = document.getElementById("tanggal");
 const tanggalGrid = document.getElementById("tanggalGrid");
 const tanggalTrigger = document.getElementById("tanggalTrigger");
@@ -27,16 +68,7 @@ function getAdminSettings() {
   try {
     const raw = localStorage.getItem(ADMIN_SETTINGS_KEY);
     const parsed = raw ? JSON.parse(raw) : {};
-    return {
-      siteClosed: Boolean(parsed.siteClosed),
-      closedDates: Array.isArray(parsed.closedDates)
-        ? parsed.closedDates.filter((dateValue) => typeof dateValue === "string")
-        : [],
-      maxPeopleByDate:
-        parsed.maxPeopleByDate && typeof parsed.maxPeopleByDate === "object"
-          ? parsed.maxPeopleByDate
-          : {},
-    };
+    return normalizeAdminSettings(parsed);
   } catch {
     return {
       siteClosed: false,
@@ -561,6 +593,9 @@ window.addEventListener("storage", (event) => {
   applyBookingDateRange();
   renderMaintenanceBanner();
 });
+
+syncAdminSettingsFromServer();
+setInterval(syncAdminSettingsFromServer, 15000);
 
 setupPaketSkeletonLoader();
 setupImagePreviewPopup();
