@@ -5,6 +5,47 @@ const ADMIN_SETTINGS_KEY = "ramadhan_admin_settings";
 const API_URL =
   "https://script.google.com/macros/s/AKfycbxJWjkbqXoxGfxZqZdq3O6RHqtmJ-cfp_PNNanwAfKNZBbi6XgcUxr6NE6ZepUTa5Xw/exec";
 
+const ADMIN_SETTINGS_ACTION_GET = "getAdminSettings";
+
+async function fetchSharedAdminSettings() {
+  const response = await fetch(`${API_URL}?action=${ADMIN_SETTINGS_ACTION_GET}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gagal mengambil pengaturan admin (${response.status})`);
+  }
+
+  const payload = await response.json();
+  return payload && typeof payload === "object" ? payload : {};
+}
+
+function normalizeAdminSettings(parsed) {
+  return {
+    siteClosed: Boolean(parsed.siteClosed),
+    closedDates: Array.isArray(parsed.closedDates)
+      ? parsed.closedDates.filter((dateValue) => typeof dateValue === "string")
+      : [],
+    maxPeopleByDate:
+      parsed.maxPeopleByDate && typeof parsed.maxPeopleByDate === "object"
+        ? parsed.maxPeopleByDate
+        : {},
+  };
+}
+
+async function syncAdminSettingsFromServer() {
+  try {
+    const remote = await fetchSharedAdminSettings();
+    const normalized = normalizeAdminSettings(remote);
+    localStorage.setItem(ADMIN_SETTINGS_KEY, JSON.stringify(normalized));
+    applyBookingDateRange();
+    renderMaintenanceBanner();
+  } catch (error) {
+    console.warn("Sinkronisasi pengaturan admin gagal:", error);
+  }
+}
+
 const tanggalInput = document.getElementById("tanggal");
 const tanggalGrid = document.getElementById("tanggalGrid");
 const tanggalTrigger = document.getElementById("tanggalTrigger");
@@ -21,19 +62,13 @@ const previewCaption = document.getElementById("previewCaption");
 const previewClose = document.getElementById("previewClose");
 const paketList = document.getElementById("paketList");
 const paketSkeleton = document.getElementById("paketSkeleton");
+const maintenanceBanner = document.getElementById("maintenanceBanner");
 
 function getAdminSettings() {
   try {
     const raw = localStorage.getItem(ADMIN_SETTINGS_KEY);
     const parsed = raw ? JSON.parse(raw) : {};
-    return {
-      siteClosed: Boolean(parsed.siteClosed),
-      closedDates: Array.isArray(parsed.closedDates) ? parsed.closedDates : [],
-      maxPeopleByDate:
-        parsed.maxPeopleByDate && typeof parsed.maxPeopleByDate === "object"
-          ? parsed.maxPeopleByDate
-          : {},
-    };
+    return normalizeAdminSettings(parsed);
   } catch {
     return {
       siteClosed: false,
@@ -91,6 +126,22 @@ function formatRupiah(value) {
   return value.toLocaleString("id-ID");
 }
 
+function isDateClosedByAdmin(dateValue, adminSettings) {
+  return adminSettings.siteClosed || adminSettings.closedDates.includes(dateValue);
+}
+
+function getMaxPeopleForDate(dateValue, adminSettings) {
+  const rawValue = Number(adminSettings.maxPeopleByDate?.[dateValue]);
+  if (!Number.isFinite(rawValue) || rawValue <= 0) return null;
+  return Math.floor(rawValue);
+}
+
+function renderMaintenanceBanner() {
+  if (!maintenanceBanner) return;
+
+  const settings = getAdminSettings();
+  maintenanceBanner.classList.toggle("hidden", !settings.siteClosed);
+}
 
 function applyBookingDateRange() {
   const { min, max } = getBookingDateRange();
@@ -112,8 +163,7 @@ function applyBookingDateRange() {
 
     const labelDay = formatDisplayDay(cursor);
     const labelDate = formatDisplayDate(cursor);
-    const closedByAdmin =
-      adminSettings.siteClosed || adminSettings.closedDates.includes(value);
+    const closedByAdmin = isDateClosedByAdmin(value, adminSettings);
 
     if (closedByAdmin) {
       button.classList.add("disabled");
@@ -209,8 +259,10 @@ document.querySelectorAll("#paketList .paket-card").forEach((card) => {
 
 updateSummary();
 applyBookingDateRange();
+renderMaintenanceBanner();
 
 tanggalTrigger.addEventListener("click", () => {
+  if (getAdminSettings().siteClosed) return;
   tanggalPanel.classList.toggle("hidden");
 });
 
@@ -401,7 +453,7 @@ submitButton.addEventListener("click", () => {
   const nama = document.getElementById("nama").value.trim();
   const whatsapp = document.getElementById("whatsapp").value.trim();
   const tanggal = tanggalInput.value;
-  const jumlahOrang = Number(jumlahOrangInput.value);
+  const jumlahOrang = Math.floor(Number(jumlahOrangInput.value));
 
   if (adminSettings.siteClosed) {
     alert("Reservasi sedang ditutup sementara oleh admin");
@@ -419,13 +471,13 @@ submitButton.addEventListener("click", () => {
     return;
   }
 
-  if (adminSettings.closedDates.includes(tanggal)) {
+  if (isDateClosedByAdmin(tanggal, adminSettings)) {
     alert("Tanggal yang dipilih sedang ditutup oleh admin");
     return;
   }
 
-  const maxPeople = Number(adminSettings.maxPeopleByDate?.[tanggal]);
-  if (Number.isFinite(maxPeople) && maxPeople > 0 && jumlahOrang > maxPeople) {
+  const maxPeople = getMaxPeopleForDate(tanggal, adminSettings);
+  if (maxPeople !== null && jumlahOrang > maxPeople) {
     alert(`Maksimal jumlah orang untuk tanggal ini adalah ${maxPeople}`);
     return;
   }
@@ -493,6 +545,24 @@ btnWA.addEventListener("click", (event) => {
 
   if (!pendingPayload) return;
 
+  const latestSettings = getAdminSettings();
+  if (isDateClosedByAdmin(pendingPayload.tanggal, latestSettings)) {
+    alert("Tanggal reservasi sudah ditutup admin. Silakan pilih tanggal lain.");
+    closePayment();
+    pendingPayload = null;
+    applyBookingDateRange();
+    renderMaintenanceBanner();
+    return;
+  }
+
+  const latestMaxPeople = getMaxPeopleForDate(pendingPayload.tanggal, latestSettings);
+  if (latestMaxPeople !== null && Number(pendingPayload.jumlah_orang) > latestMaxPeople) {
+    alert(`Maksimal jumlah orang untuk tanggal ini adalah ${latestMaxPeople}`);
+    closePayment();
+    pendingPayload = null;
+    return;
+  }
+
   startWaButtonLoading();
 
   const form = document.createElement("form");
@@ -517,6 +587,15 @@ btnWA.addEventListener("click", (event) => {
 });
 
 window.closePayment = closePayment;
+
+window.addEventListener("storage", (event) => {
+  if (event.key !== ADMIN_SETTINGS_KEY) return;
+  applyBookingDateRange();
+  renderMaintenanceBanner();
+});
+
+syncAdminSettingsFromServer();
+setInterval(syncAdminSettingsFromServer, 15000);
 
 setupPaketSkeletonLoader();
 setupImagePreviewPopup();

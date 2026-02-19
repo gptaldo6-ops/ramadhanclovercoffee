@@ -15,6 +15,21 @@ body {
   color: #222;
 }
 
+.maintenance-banner {
+  position: sticky;
+  top: 0;
+  z-index: 1200;
+  margin: -14px -14px 12px;
+  padding: 12px 14px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 600;
+  color: #7a1f1f;
+  background: #ffe2e2;
+  border-bottom: 1px solid #f1b7b7;
+}
+
 .head-text {
   max-width: 260px;
   width: 100%;
