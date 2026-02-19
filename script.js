@@ -478,7 +478,7 @@ submitButton.addEventListener("click", () => {
 
   const maxPeople = getMaxPeopleForDate(tanggal, adminSettings);
   if (maxPeople !== null && jumlahOrang > maxPeople) {
-    alert(`Maksimal jumlah orang untuk tanggal ini adalah ${maxPeople}`);
+    alert(`Mohon Maaf, hanya tersisa meja untuk ${maxPeople} orang`);
     return;
   }
 
@@ -490,7 +490,7 @@ submitButton.addEventListener("click", () => {
 
   const totalPaket = paket.reduce((sum, item) => sum + item.qty, 0);
   if (totalPaket < jumlahOrang) {
-    alert("Jumlah paket harus sama atau lebih banyak dari jumlah orang");
+    alert("Biar semuanya kebagian, jumlah paket harus sama dengan jumlah orang yaa😊");
     return;
   }
 
