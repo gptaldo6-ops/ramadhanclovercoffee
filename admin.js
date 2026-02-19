@@ -270,7 +270,8 @@ function renderMonitoringTable(settings) {
     const reserved = getReservedCountForDate(dateKey, groupsByDate, settings);
     const estimateRemaining = Math.max(TOTAL_SEATS - reserved, 0);
     const manualValue = Number(settings.manualReservedByDate?.[dateKey]);
-    const maxPeople = Number(settings.maxPeopleByDate?.[dateKey]);
+    const maxPeopleRaw = Number(settings.maxPeopleByDate?.[dateKey]);
+    const maxPeople = Number.isFinite(maxPeopleRaw) && maxPeopleRaw > 0 ? Math.floor(maxPeopleRaw) : null;
     const stillCanFit = Number.isFinite(manualValue) && manualValue >= 0
       ? reserved < TOTAL_SEATS
       : canServeParties([...parties, 1]);
@@ -285,7 +286,7 @@ function renderMonitoringTable(settings) {
       <tr>
         <td>${formatDisplayDay(cursor)}, ${formatDisplayDate(cursor)}</td>
         <td><input type="number" min="0" class="reserved-input" data-date="${dateKey}" value="${reserved}" /></td>
-        <td><input type="number" min="1" class="max-people-input" data-date="${dateKey}" value="${Number.isFinite(maxPeople) && maxPeople > 0 ? maxPeople : ""}" placeholder="-" /></td>
+        <td><input type="number" min="1" step="1" class="max-people-input" data-date="${dateKey}" value="${maxPeople ?? ""}" placeholder="-" /></td>
         <td>${TOTAL_SEATS}</td>
         <td>${estimateRemaining}</td>
         <td>${status}</td>
@@ -353,7 +354,7 @@ btnSave.addEventListener("click", () => {
     const value = Number(input.value);
     if (!date) return;
     if (Number.isFinite(value) && value > 0) {
-      maxPeopleByDate[date] = value;
+      maxPeopleByDate[date] = Math.floor(value);
     } else {
       delete maxPeopleByDate[date];
     }
