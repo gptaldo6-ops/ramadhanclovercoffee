@@ -151,21 +151,20 @@
     </div>
   </section>
 
-  <section class="section-menu-reguler">
-    <h3>Menu Reguler</h3>
-    <p class="menu-reguler-desc">
-      Reguler dibuka jam 19.00 (namun dapat dibuka lebih awal sesuai kondisi)<br />
-      Pemesanan dan pembayaran menu reguler bisa di kasir.<br />
-      Kami mendahulukan pesanan untuk yang reservasi. 😊
-    </p>
-    <a
-      href="./menu-reguler.pdf"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="btn-menu-reguler"
-    >
-      Cek Menu Reguler (PDF)
-    </a>
+  <section class="section-addon">
+    <h3>Pilih Add On</h3>
+    <div class="addon-note">
+      ☘️Menu Add on adalah tambahan untuk paket Cotar yang telah kamu pesan☘️<br />
+      ☘️Menu Add on ini akan dibuatkan setelah jam 19:00☘️<br />
+      ☘️Kami mendahulukan pesanan paket Cotar☘️<br />
+      ☘️Pembayaran pesanan add on hanya bisa dilakukan di KASIR☘️
+    </div>
+
+    <h4 class="addon-subtitle">Drink</h4>
+    <div id="addonDrinkGrid" class="addon-grid"></div>
+
+    <h4 class="addon-subtitle">Food</h4>
+    <div id="addonFoodGrid" class="addon-grid"></div>
   </section>
 
   <section>
@@ -185,15 +184,20 @@
 
       <p class="label">Total Pembayaran</p>
       <div class="total">Rp <span id="payTotal">0</span></div>
+      <p class="addon-total-note">
+        Total Add On: Rp <span id="payAddonTotal">0</span><br />
+        <small>☘️Pembayaran pesanan add on hanya bisa dilakukan di KASIR☘️</small>
+      </p>
 
       <img src="./img/qris.png" class="qris-img" alt="QRIS" />
 
       <div class="instruksi">
         <p>Instruksi Pembayaran:</p>
         <ol>
-          <li>Lakukan pembayaran QRIS sesuai total pembayaran</li>
-          <li>Atau DP 50%</li>
-          <li>Klik tombol di bawah untuk kirim bukti transfer</li>
+          <li>☘️Lakukan pembayaran QRIS sesuai total pembayaran paket Cotar☘️</li>
+          <li>☘️Atau DP 50%☘️</li>
+          <li>☘️Pembayaran pesanan add on dilakukan di KASIR☘️</li>
+          <li>☘️Klik tombol di bawah untuk kirim bukti transfer☘️</li>
         </ol>
       </div>
 
