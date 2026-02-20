@@ -94,7 +94,7 @@ const ADD_ON_ITEMS = [
   { name: "Lychee Tea", category: "Drink", price: 20000, image: "./img/addon/lychee-tea.jpg" },
   { name: "Peach Tea", category: "Drink", price: 20000, image: "./img/addon/peach-tea.jpg" },
   { name: "Javakisa", category: "Drink", price: 20000, image: "./img/addon/javakisa.jpg" },
-  { name: "Apple Rocl", category: "Drink", price: 20000, image: "./img/addon/apple-rocl.jpg" },
+  { name: "Apple Rock", category: "Drink", price: 20000, image: "./img/addon/apple-rocl.jpg" },
   { name: "Rice", category: "Food", price: 5000, image: "./img/addon/rice.jpg" },
   { name: "Mix Platter", category: "Food", price: 25000, image: "./img/addon/mix-platter.jpg" },
   { name: "Kentang Goreng", category: "Food", price: 22000, image: "./img/addon/kentang-goreng.jpg" },
