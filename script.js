@@ -543,12 +543,6 @@ submitButton.addEventListener("click", () => {
     return;
   }
 
-  const totalPaket = paket.reduce((sum, item) => sum + item.qty, 0);
-  if (totalPaket < jumlahOrang) {
-    alert("Biar semuanya kebagian, jumlah paket harus sama dengan jumlah orang yaa😊");
-    return;
-  }
-
   const cotarQtyFields = buildCotarQtyFields(paket);
   const totalHarga = paket.reduce((sum, item) => sum + item.harga * item.qty, 0);
 
