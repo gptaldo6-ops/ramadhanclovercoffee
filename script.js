@@ -55,6 +55,7 @@ const summaryContainer = document.getElementById("order-summary");
 const submitButton = document.getElementById("btnSubmit");
 const paymentModal = document.getElementById("paymentModal");
 const payTotal = document.getElementById("payTotal");
+const payAddonTotal = document.getElementById("payAddonTotal");
 const btnWA = document.getElementById("btnWA");
 const menuPreviewModal = document.getElementById("menuPreviewModal");
 const previewImage = document.getElementById("previewImage");
@@ -63,6 +64,44 @@ const previewClose = document.getElementById("previewClose");
 const paketList = document.getElementById("paketList");
 const paketSkeleton = document.getElementById("paketSkeleton");
 const maintenanceBanner = document.getElementById("maintenanceBanner");
+
+const addonDrinkGrid = document.getElementById("addonDrinkGrid");
+const addonFoodGrid = document.getElementById("addonFoodGrid");
+
+const ADD_ON_ITEMS = [
+  { name: "Matcha Latte Ice", category: "Drink", price: 23000 },
+  { name: "Taro Latte Ice", category: "Drink", price: 20000 },
+  { name: "Choco Dubai", category: "Drink", price: 25000 },
+  { name: "Choco Milk Ice", category: "Drink", price: 20000 },
+  { name: "Cremento (1Liter)", category: "Drink", price: 80000 },
+  { name: "Cremento (250ml)", category: "Drink", price: 25000 },
+  { name: "Comiclo (1Liter)", category: "Drink", price: 80000 },
+  { name: "Comiclo (250ml)", category: "Drink", price: 20000 },
+  { name: "Cloren (1Liter)", category: "Drink", price: 80000 },
+  { name: "Cloren (250ml)", category: "Drink", price: 20000 },
+  { name: "Sweet Tea", category: "Drink", price: 15000 },
+  { name: "Lemon Tea", category: "Drink", price: 18000 },
+  { name: "Lychee Tea", category: "Drink", price: 20000 },
+  { name: "Peach Tea", category: "Drink", price: 20000 },
+  { name: "Javakisa", category: "Drink", price: 20000 },
+  { name: "Apple Rocl", category: "Drink", price: 20000 },
+  { name: "Rice", category: "Food", price: 5000 },
+  { name: "Mix Platter", category: "Food", price: 25000 },
+  { name: "Kentang Goreng", category: "Food", price: 22000 },
+  { name: "Dimsum Siomay Nori", category: "Food", price: 20000 },
+  { name: "Dimsum Siomay Ayam", category: "Food", price: 20000 },
+  { name: "Dimsum Siomay Mercon", category: "Food", price: 20000 },
+  { name: "Dimsum Siomay Kulit Tahu Ayam", category: "Food", price: 20000 },
+  { name: "Banana Split", category: "Food", price: 20000 },
+  { name: "Waffle", category: "Food", price: 25000 },
+  { name: "Cireng Bumbu Rujak", category: "Food", price: 20000 },
+  { name: "Keju Aroma", category: "Food", price: 20000 },
+  { name: "Matcha Cake", category: "Food", price: 25000 },
+  { name: "Choco Almond", category: "Food", price: 25000 },
+  { name: "Cheese Cake", category: "Food", price: 27000 },
+  { name: "Blueberry Cheese Cake", category: "Food", price: 29000 },
+  { name: "Ice Berg Cheese Cake", category: "Food", price: 33000 },
+];
 
 function getAdminSettings() {
   try {
@@ -195,39 +234,77 @@ function applyBookingDateRange() {
   }
 }
 
-function updateSummary() {
-  let html = "";
-  let hasData = false;
-  let totalSubtotal = 0;
+function collectAddonData() {
+  const data = [];
 
-  document.querySelectorAll("#paketList .paket-card").forEach((card) => {
-    const paketName = card.querySelector("strong").textContent;
-    const paketInfo = card.dataset.info;
-    const harga = Number(card.dataset.harga);
-    const qty = Number(card.querySelector(".paket-qty").textContent);
-
+  document.querySelectorAll(".addon-card").forEach((card) => {
+    const qty = Number(card.querySelector(".addon-qty").textContent);
     if (qty <= 0) return;
 
-    hasData = true;
-    totalSubtotal += harga * qty;
-    html += `
-      <div class="summary-item">
-        <strong>${paketName} × ${qty}</strong><br/>
-        <span class="summary-meta">${paketInfo}</span><br/>
-        <span class="summary-meta">Rp${formatRupiah(harga)} / paket</span><br/>
-      </div>
-    `;
+    data.push({
+      namaAddOn: card.dataset.nama,
+      kategori: card.dataset.kategori,
+      harga: Number(card.dataset.harga),
+      qty,
+    });
   });
 
-  if (hasData) {
+  return data;
+}
+
+function updateSummary() {
+  let html = "";
+  const paket = collectPaketData();
+  const addOn = collectAddonData();
+
+  const totalPaket = paket.reduce((sum, item) => sum + item.harga * item.qty, 0);
+  const totalAddOn = addOn.reduce((sum, item) => sum + item.harga * item.qty, 0);
+
+  if (paket.length) {
+    html += '<div class="summary-group"><strong>Paket Cotar</strong></div>';
+    paket.forEach((item) => {
+      html += `
+        <div class="summary-item">
+          <strong>${item.namaPaket} × ${item.qty}</strong><br/>
+          <span class="summary-meta">${item.infoPaket}</span><br/>
+          <span class="summary-meta">Rp${formatRupiah(item.harga)} / paket</span><br/>
+        </div>
+      `;
+    });
     html += `
       <div class="summary-item">
-        <strong>Subtotal Semua Pesanan: Rp${formatRupiah(totalSubtotal)}</strong>
+        <strong>Total Paket: Rp${formatRupiah(totalPaket)}</strong>
       </div>
     `;
   }
 
-  summaryContainer.innerHTML = hasData ? html : "<p>Belum ada paket dipilih</p>";
+  if (addOn.length) {
+    html += '<div class="summary-group"><strong>Add On</strong></div>';
+    addOn.forEach((item) => {
+      html += `
+        <div class="summary-item">
+          <strong>${item.namaAddOn} × ${item.qty}</strong><br/>
+          <span class="summary-meta">${item.kategori}</span><br/>
+          <span class="summary-meta">Rp${formatRupiah(item.harga)} / item</span><br/>
+        </div>
+      `;
+    });
+    html += `
+      <div class="summary-item">
+        <strong>Total Add On: Rp${formatRupiah(totalAddOn)}</strong>
+      </div>
+    `;
+  }
+
+  if (paket.length || addOn.length) {
+    html += `
+      <div class="summary-item">
+        <strong>Total Semua Pesanan: Rp${formatRupiah(totalPaket + totalAddOn)}</strong>
+      </div>
+    `;
+  }
+
+  summaryContainer.innerHTML = html || "<p>Belum ada paket dipilih</p>";
 }
 
 document.querySelectorAll("#paketList .paket-card").forEach((card) => {
@@ -251,6 +328,62 @@ document.querySelectorAll("#paketList .paket-card").forEach((card) => {
     updateSummary();
   });
 });
+
+function createAddonCard(item) {
+  const card = document.createElement("div");
+  card.className = "addon-card";
+  card.dataset.nama = item.name;
+  card.dataset.kategori = item.category;
+  card.dataset.harga = String(item.price);
+
+  card.innerHTML = `
+    <div class="addon-img-dummy" aria-hidden="true"></div>
+    <p class="addon-name">${item.name}</p>
+    <p class="addon-price">Rp${formatRupiah(item.price)}</p>
+    <div class="qty-control addon-qty-control">
+      <button type="button" class="addon-minus">−</button>
+      <span class="addon-qty">0</span>
+      <button type="button" class="addon-plus">+</button>
+    </div>
+  `;
+
+  const qtyEl = card.querySelector(".addon-qty");
+  const plus = card.querySelector(".addon-plus");
+  const minus = card.querySelector(".addon-minus");
+  let qty = 0;
+
+  plus.addEventListener("click", () => {
+    qty += 1;
+    qtyEl.textContent = qty;
+    updateSummary();
+  });
+
+  minus.addEventListener("click", () => {
+    if (qty > 0) qty -= 1;
+    qtyEl.textContent = qty;
+    updateSummary();
+  });
+
+  return card;
+}
+
+function renderAddOnMenu() {
+  if (!addonDrinkGrid || !addonFoodGrid) return;
+
+  addonDrinkGrid.innerHTML = "";
+  addonFoodGrid.innerHTML = "";
+
+  ADD_ON_ITEMS.forEach((item) => {
+    const card = createAddonCard(item);
+    if (item.category === "Drink") {
+      addonDrinkGrid.appendChild(card);
+    } else {
+      addonFoodGrid.appendChild(card);
+    }
+  });
+}
+
+renderAddOnMenu();
 
 updateSummary();
 applyBookingDateRange();
@@ -543,8 +676,10 @@ submitButton.addEventListener("click", () => {
     return;
   }
 
+  const addOn = collectAddonData();
   const cotarQtyFields = buildCotarQtyFields(paket);
   const totalHarga = paket.reduce((sum, item) => sum + item.harga * item.qty, 0);
+  const totalAddOn = addOn.reduce((sum, item) => sum + item.harga * item.qty, 0);
 
   pendingPayload = {
     nama,
@@ -553,8 +688,11 @@ submitButton.addEventListener("click", () => {
     jumlah_orang: jumlahOrang,
     jumlahOrang,
     paket,
+    add_on: addOn,
     total_harga: totalHarga,
     totalHarga,
+    addon_total_harga: totalAddOn,
+    addonTotalHarga: totalAddOn,
     ...cotarQtyFields,
   };
 
@@ -562,6 +700,7 @@ submitButton.addEventListener("click", () => {
     nama,
     tanggal,
     total: totalHarga,
+    addonTotal: totalAddOn,
   });
 
   startSubmitButtonLoading();
@@ -570,8 +709,11 @@ submitButton.addEventListener("click", () => {
   }, 7000);
 });
 
-function showPaymentPopup({ nama, tanggal, total }) {
+function showPaymentPopup({ nama, tanggal, total, addonTotal = 0 }) {
   payTotal.textContent = formatRupiah(total);
+  if (payAddonTotal) {
+    payAddonTotal.textContent = formatRupiah(addonTotal);
+  }
 
   btnWA.href =
     "https://wa.me/6285121396083?text=" +
