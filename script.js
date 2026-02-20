@@ -55,6 +55,7 @@ const summaryContainer = document.getElementById("order-summary");
 const submitButton = document.getElementById("btnSubmit");
 const paymentModal = document.getElementById("paymentModal");
 const payTotal = document.getElementById("payTotal");
+const payAddonTotal = document.getElementById("payAddonTotal");
 const btnWA = document.getElementById("btnWA");
 const menuPreviewModal = document.getElementById("menuPreviewModal");
 const previewImage = document.getElementById("previewImage");
@@ -63,6 +64,54 @@ const previewClose = document.getElementById("previewClose");
 const paketList = document.getElementById("paketList");
 const paketSkeleton = document.getElementById("paketSkeleton");
 const maintenanceBanner = document.getElementById("maintenanceBanner");
+
+const addonDrinkGrid = document.getElementById("addonDrinkGrid");
+const addonFoodGrid = document.getElementById("addonFoodGrid");
+const addonDrinkWrap = document.getElementById("addonDrinkWrap");
+const addonFoodWrap = document.getElementById("addonFoodWrap");
+const btnShowDrinkAddon = document.getElementById("btnShowDrinkAddon");
+const btnShowFoodAddon = document.getElementById("btnShowFoodAddon");
+const drinkConsentInline = document.getElementById("drinkConsentInline");
+const foodConsentInline = document.getElementById("foodConsentInline");
+const btnDrinkAgree = document.getElementById("btnDrinkAgree");
+const btnDrinkDecline = document.getElementById("btnDrinkDecline");
+const btnFoodAgree = document.getElementById("btnFoodAgree");
+const btnFoodDecline = document.getElementById("btnFoodDecline");
+
+const ADD_ON_ITEMS = [
+  { name: "Matcha Latte Ice", category: "Drink", price: 23000, image: "" },
+  { name: "Taro Latte Ice", category: "Drink", price: 20000, image: "" },
+  { name: "Choco Dubai", category: "Drink", price: 25000, image: "" },
+  { name: "Choco Milk Ice", category: "Drink", price: 20000, image: "" },
+  { name: "Cremento (1Liter)", category: "Drink", price: 80000, image: "" },
+  { name: "Cremento (250ml)", category: "Drink", price: 25000, image: "" },
+  { name: "Comiclo (1Liter)", category: "Drink", price: 80000, image: "" },
+  { name: "Comiclo (250ml)", category: "Drink", price: 20000, image: "" },
+  { name: "Cloren (1Liter)", category: "Drink", price: 80000, image: "" },
+  { name: "Cloren (250ml)", category: "Drink", price: 20000, image: "" },
+  { name: "Sweet Tea", category: "Drink", price: 15000, image: "" },
+  { name: "Lemon Tea", category: "Drink", price: 18000, image: "" },
+  { name: "Lychee Tea", category: "Drink", price: 20000, image: "" },
+  { name: "Peach Tea", category: "Drink", price: 20000, image: "" },
+  { name: "Javakisa", category: "Drink", price: 20000, image: "" },
+  { name: "Apple Rocl", category: "Drink", price: 20000, image: "" },
+  { name: "Rice", category: "Food", price: 5000, image: "" },
+  { name: "Mix Platter", category: "Food", price: 25000, image: "" },
+  { name: "Kentang Goreng", category: "Food", price: 22000, image: "" },
+  { name: "Dimsum Siomay Nori", category: "Food", price: 20000, image: "" },
+  { name: "Dimsum Siomay Ayam", category: "Food", price: 20000, image: "" },
+  { name: "Dimsum Siomay Mercon", category: "Food", price: 20000, image: "" },
+  { name: "Dimsum Siomay Kulit Tahu Ayam", category: "Food", price: 20000, image: "" },
+  { name: "Banana Split", category: "Food", price: 20000, image: "" },
+  { name: "Waffle", category: "Food", price: 25000, image: "" },
+  { name: "Cireng Bumbu Rujak", category: "Food", price: 20000, image: "" },
+  { name: "Keju Aroma", category: "Food", price: 20000, image: "" },
+  { name: "Matcha Cake", category: "Food", price: 25000, image: "" },
+  { name: "Choco Almond", category: "Food", price: 25000, image: "" },
+  { name: "Cheese Cake", category: "Food", price: 27000, image: "" },
+  { name: "Blueberry Cheese Cake", category: "Food", price: 29000, image: "" },
+  { name: "Ice Berg Cheese Cake", category: "Food", price: 33000, image: "" },
+];
 
 function getAdminSettings() {
   try {
@@ -195,39 +244,77 @@ function applyBookingDateRange() {
   }
 }
 
-function updateSummary() {
-  let html = "";
-  let hasData = false;
-  let totalSubtotal = 0;
+function collectAddonData() {
+  const data = [];
 
-  document.querySelectorAll("#paketList .paket-card").forEach((card) => {
-    const paketName = card.querySelector("strong").textContent;
-    const paketInfo = card.dataset.info;
-    const harga = Number(card.dataset.harga);
-    const qty = Number(card.querySelector(".paket-qty").textContent);
-
+  document.querySelectorAll(".addon-card").forEach((card) => {
+    const qty = Number(card.querySelector(".addon-qty").textContent);
     if (qty <= 0) return;
 
-    hasData = true;
-    totalSubtotal += harga * qty;
-    html += `
-      <div class="summary-item">
-        <strong>${paketName} × ${qty}</strong><br/>
-        <span class="summary-meta">${paketInfo}</span><br/>
-        <span class="summary-meta">Rp${formatRupiah(harga)} / paket</span><br/>
-      </div>
-    `;
+    data.push({
+      namaAddOn: card.dataset.nama,
+      kategori: card.dataset.kategori,
+      harga: Number(card.dataset.harga),
+      qty,
+    });
   });
 
-  if (hasData) {
+  return data;
+}
+
+function updateSummary() {
+  let html = "";
+  const paket = collectPaketData();
+  const addOn = collectAddonData();
+
+  const totalPaket = paket.reduce((sum, item) => sum + item.harga * item.qty, 0);
+  const totalAddOn = addOn.reduce((sum, item) => sum + item.harga * item.qty, 0);
+
+  if (paket.length) {
+    html += '<div class="summary-group"><strong>Paket Cotar</strong></div>';
+    paket.forEach((item) => {
+      html += `
+        <div class="summary-item">
+          <strong>${item.namaPaket} × ${item.qty}</strong><br/>
+          <span class="summary-meta">${item.infoPaket}</span><br/>
+          <span class="summary-meta">Rp${formatRupiah(item.harga)} / paket</span><br/>
+        </div>
+      `;
+    });
     html += `
       <div class="summary-item">
-        <strong>Subtotal Semua Pesanan: Rp${formatRupiah(totalSubtotal)}</strong>
+        <strong>Total Paket: Rp${formatRupiah(totalPaket)}</strong>
       </div>
     `;
   }
 
-  summaryContainer.innerHTML = hasData ? html : "<p>Belum ada paket dipilih</p>";
+  if (addOn.length) {
+    html += '<div class="summary-group"><strong>Add On</strong></div>';
+    addOn.forEach((item) => {
+      html += `
+        <div class="summary-item">
+          <strong>${item.namaAddOn} × ${item.qty}</strong><br/>
+          <span class="summary-meta">${item.kategori}</span><br/>
+          <span class="summary-meta">Rp${formatRupiah(item.harga)} / item</span><br/>
+        </div>
+      `;
+    });
+    html += `
+      <div class="summary-item">
+        <strong>Total Add On: Rp${formatRupiah(totalAddOn)}</strong>
+      </div>
+    `;
+  }
+
+  if (paket.length || addOn.length) {
+    html += `
+      <div class="summary-item">
+        <strong>Total Semua Pesanan: Rp${formatRupiah(totalPaket + totalAddOn)}</strong>
+      </div>
+    `;
+  }
+
+  summaryContainer.innerHTML = html || "<p>Belum ada paket dipilih</p>";
 }
 
 document.querySelectorAll("#paketList .paket-card").forEach((card) => {
@@ -252,6 +339,89 @@ document.querySelectorAll("#paketList .paket-card").forEach((card) => {
   });
 });
 
+function createAddonCard(item) {
+  const card = document.createElement("div");
+  card.className = "addon-card";
+  card.dataset.nama = item.name;
+  card.dataset.kategori = item.category;
+  card.dataset.harga = String(item.price);
+
+  const addOnImageHtml = item.image
+    ? `<img src="${item.image}" alt="${item.name}" class="addon-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />`
+    : "";
+
+  card.innerHTML = `
+    ${addOnImageHtml}
+    <div class="addon-img-dummy" aria-hidden="true" style="display:${item.image ? "none" : "block"}"></div>
+    <p class="addon-name">${item.name}</p>
+    <p class="addon-price">Rp${formatRupiah(item.price)}</p>
+    <div class="qty-control addon-qty-control">
+      <button type="button" class="addon-minus">−</button>
+      <span class="addon-qty">0</span>
+      <button type="button" class="addon-plus">+</button>
+    </div>
+  `;
+
+  const qtyEl = card.querySelector(".addon-qty");
+  const plus = card.querySelector(".addon-plus");
+  const minus = card.querySelector(".addon-minus");
+  let qty = 0;
+
+  plus.addEventListener("click", () => {
+    qty += 1;
+    qtyEl.textContent = qty;
+    updateSummary();
+  });
+
+  minus.addEventListener("click", () => {
+    if (qty > 0) qty -= 1;
+    qtyEl.textContent = qty;
+    updateSummary();
+  });
+
+  return card;
+}
+
+function renderAddOnMenu() {
+  if (!addonDrinkGrid || !addonFoodGrid) return;
+
+  addonDrinkGrid.innerHTML = "";
+  addonFoodGrid.innerHTML = "";
+
+  ADD_ON_ITEMS.forEach((item) => {
+    const card = createAddonCard(item);
+    if (item.category === "Drink") {
+      addonDrinkGrid.appendChild(card);
+    } else {
+      addonFoodGrid.appendChild(card);
+    }
+  });
+}
+
+function setAddonCategoryVisibility(category, isVisible) {
+  const isDrink = category === "Drink";
+  const wrap = isDrink ? addonDrinkWrap : addonFoodWrap;
+
+  if (!wrap) return;
+
+  wrap.classList.toggle("expanded", isVisible);
+  wrap.setAttribute("aria-hidden", isVisible ? "false" : "true");
+
+  if (isVisible) {
+    const grid = isDrink ? addonDrinkGrid : addonFoodGrid;
+    if (grid) {
+      const targetHeight = grid.scrollHeight + 12;
+      wrap.style.maxHeight = `${targetHeight}px`;
+    }
+  } else {
+    wrap.style.maxHeight = "0px";
+  }
+}
+
+renderAddOnMenu();
+setAddonCategoryVisibility("Drink", false);
+setAddonCategoryVisibility("Food", false);
+
 updateSummary();
 applyBookingDateRange();
 renderMaintenanceBanner();
@@ -267,6 +437,62 @@ document.addEventListener("click", (event) => {
     tanggalPanel.classList.add("hidden");
   }
 });
+
+if (btnShowDrinkAddon) {
+  btnShowDrinkAddon.addEventListener("click", () => {
+    if (drinkConsentInline) {
+      drinkConsentInline.classList.remove("hidden");
+    }
+  });
+}
+
+if (btnShowFoodAddon) {
+  btnShowFoodAddon.addEventListener("click", () => {
+    if (foodConsentInline) {
+      foodConsentInline.classList.remove("hidden");
+    }
+  });
+}
+
+if (btnDrinkAgree) {
+  btnDrinkAgree.addEventListener("click", () => {
+    setAddonCategoryVisibility("Drink", true);
+    if (drinkConsentInline) {
+      drinkConsentInline.classList.add("hidden");
+    }
+    if (btnShowDrinkAddon) {
+      btnShowDrinkAddon.classList.add("hidden");
+    }
+  });
+}
+
+if (btnFoodAgree) {
+  btnFoodAgree.addEventListener("click", () => {
+    setAddonCategoryVisibility("Food", true);
+    if (foodConsentInline) {
+      foodConsentInline.classList.add("hidden");
+    }
+    if (btnShowFoodAddon) {
+      btnShowFoodAddon.classList.add("hidden");
+    }
+  });
+}
+
+if (btnDrinkDecline) {
+  btnDrinkDecline.addEventListener("click", () => {
+    if (drinkConsentInline) {
+      drinkConsentInline.classList.add("hidden");
+    }
+  });
+}
+
+if (btnFoodDecline) {
+  btnFoodDecline.addEventListener("click", () => {
+    if (foodConsentInline) {
+      foodConsentInline.classList.add("hidden");
+    }
+  });
+}
 
 function collectPaketData() {
   const data = [];
@@ -543,8 +769,10 @@ submitButton.addEventListener("click", () => {
     return;
   }
 
+  const addOn = collectAddonData();
   const cotarQtyFields = buildCotarQtyFields(paket);
   const totalHarga = paket.reduce((sum, item) => sum + item.harga * item.qty, 0);
+  const totalAddOn = addOn.reduce((sum, item) => sum + item.harga * item.qty, 0);
 
   pendingPayload = {
     nama,
@@ -553,8 +781,11 @@ submitButton.addEventListener("click", () => {
     jumlah_orang: jumlahOrang,
     jumlahOrang,
     paket,
+    add_on: addOn,
     total_harga: totalHarga,
     totalHarga,
+    addon_total_harga: totalAddOn,
+    addonTotalHarga: totalAddOn,
     ...cotarQtyFields,
   };
 
@@ -562,6 +793,7 @@ submitButton.addEventListener("click", () => {
     nama,
     tanggal,
     total: totalHarga,
+    addonTotal: totalAddOn,
   });
 
   startSubmitButtonLoading();
@@ -570,8 +802,11 @@ submitButton.addEventListener("click", () => {
   }, 7000);
 });
 
-function showPaymentPopup({ nama, tanggal, total }) {
+function showPaymentPopup({ nama, tanggal, total, addonTotal = 0 }) {
   payTotal.textContent = formatRupiah(total);
+  if (payAddonTotal) {
+    payAddonTotal.textContent = formatRupiah(addonTotal);
+  }
 
   btnWA.href =
     "https://wa.me/6285121396083?text=" +
