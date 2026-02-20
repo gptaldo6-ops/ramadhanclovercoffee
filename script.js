@@ -100,13 +100,8 @@ function getBookingDateRange() {
   const rangeStart = new Date(2026, 1, 20);
   const rangeEnd = addDays(rangeStart, 29);
 
-  const now = new Date();
-  const currentDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const todayCutoff = addDays(currentDay, now.getHours() >= 16 ? 1 : 0);
-  const effectiveMin = todayCutoff > rangeStart ? todayCutoff : rangeStart;
-
   return {
-    min: toDateString(effectiveMin),
+    min: toDateString(rangeStart),
     max: toDateString(rangeEnd),
   };
 }
