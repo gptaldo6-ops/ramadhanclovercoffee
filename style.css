@@ -480,31 +480,116 @@ input {
   font-size: 14px;
 }
 
+.addon-reveal-btn {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #1e88e5;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
 .addon-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .addon-card {
   border: 1px solid #ddd;
-  border-radius: 12px;
-  padding: 10px;
+  border-radius: 10px;
+  padding: 6px;
   background: #fff;
 }
 
 .addon-img-dummy {
   width: 100%;
   aspect-ratio: 1 / 1;
-  border-radius: 10px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #e8e8e8, #d7d7d7);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .addon-name {
   margin: 0;
-  font-size: 13px;
+  font-size: 10px;
   font-weight: 600;
+  line-height: 1.25;
+  min-height: 26px;
+}
+
+.addon-price {
+  margin: 4px 0 6px;
+  font-size: 10px;
+  color: #666;
+}
+
+.addon-qty-control {
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.addon-qty-control button {
+  width: 24px;
+  height: 24px;
+  font-size: 15px;
+  border-radius: 6px;
+}
+
+.addon-qty {
+  min-width: 12px;
+  text-align: center;
+}
+
+.addon-consent-content {
+  max-width: 340px;
+}
+
+.addon-consent-text {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.addon-consent-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.addon-consent-agree,
+.addon-consent-decline {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 13px;
+}
+
+.addon-consent-agree {
+  background: #1e88e5;
+  color: #fff;
+}
+
+.addon-consent-decline {
+  background: #d5d5d5;
+  color: #333;
+}
+
+.summary-group {
+  margin: 10px 0 6px;
+}
+
+.addon-total-note {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: #555;
+}
+
+.addon-total-note small {
+  color: #7a1f1f;
 }
 
 .addon-price {

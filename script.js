@@ -67,6 +67,17 @@ const maintenanceBanner = document.getElementById("maintenanceBanner");
 
 const addonDrinkGrid = document.getElementById("addonDrinkGrid");
 const addonFoodGrid = document.getElementById("addonFoodGrid");
+const btnShowDrinkAddon = document.getElementById("btnShowDrinkAddon");
+const btnShowFoodAddon = document.getElementById("btnShowFoodAddon");
+const addonConsentModal = document.getElementById("addonConsentModal");
+const btnAddonAgree = document.getElementById("btnAddonAgree");
+const btnAddonDecline = document.getElementById("btnAddonDecline");
+
+let pendingAddonCategory = null;
+const addonConsentState = {
+  Drink: false,
+  Food: false,
+};
 
 const ADD_ON_ITEMS = [
   { name: "Matcha Latte Ice", category: "Drink", price: 23000 },
@@ -383,7 +394,37 @@ function renderAddOnMenu() {
   });
 }
 
+function setAddonCategoryVisibility(category, isVisible) {
+  const isDrink = category === "Drink";
+  const grid = isDrink ? addonDrinkGrid : addonFoodGrid;
+  const button = isDrink ? btnShowDrinkAddon : btnShowFoodAddon;
+
+  if (grid) {
+    grid.classList.toggle("hidden", !isVisible);
+  }
+
+  if (button) {
+    button.classList.toggle("hidden", isVisible);
+  }
+}
+
+function openAddonConsent(category) {
+  pendingAddonCategory = category;
+  if (!addonConsentModal) return;
+  addonConsentModal.classList.remove("hidden");
+  addonConsentModal.classList.add("modal-opening");
+}
+
+function closeAddonConsent() {
+  if (!addonConsentModal) return;
+  addonConsentModal.classList.add("hidden");
+  addonConsentModal.classList.remove("modal-opening");
+  pendingAddonCategory = null;
+}
+
 renderAddOnMenu();
+setAddonCategoryVisibility("Drink", addonConsentState.Drink);
+setAddonCategoryVisibility("Food", addonConsentState.Food);
 
 updateSummary();
 applyBookingDateRange();
@@ -400,6 +441,35 @@ document.addEventListener("click", (event) => {
     tanggalPanel.classList.add("hidden");
   }
 });
+
+if (btnShowDrinkAddon) {
+  btnShowDrinkAddon.addEventListener("click", () => openAddonConsent("Drink"));
+}
+
+if (btnShowFoodAddon) {
+  btnShowFoodAddon.addEventListener("click", () => openAddonConsent("Food"));
+}
+
+if (btnAddonAgree) {
+  btnAddonAgree.addEventListener("click", () => {
+    if (!pendingAddonCategory) return;
+    addonConsentState[pendingAddonCategory] = true;
+    setAddonCategoryVisibility(pendingAddonCategory, true);
+    closeAddonConsent();
+  });
+}
+
+if (btnAddonDecline) {
+  btnAddonDecline.addEventListener("click", closeAddonConsent);
+}
+
+if (addonConsentModal) {
+  addonConsentModal.addEventListener("click", (event) => {
+    if (event.target === addonConsentModal) {
+      closeAddonConsent();
+    }
+  });
+}
 
 function collectPaketData() {
   const data = [];

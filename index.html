@@ -161,10 +161,12 @@
     </div>
 
     <h4 class="addon-subtitle">Drink</h4>
-    <div id="addonDrinkGrid" class="addon-grid"></div>
+    <button type="button" id="btnShowDrinkAddon" class="addon-reveal-btn">Pesan Minuman Tambahan</button>
+    <div id="addonDrinkGrid" class="addon-grid hidden"></div>
 
     <h4 class="addon-subtitle">Food</h4>
-    <div id="addonFoodGrid" class="addon-grid"></div>
+    <button type="button" id="btnShowFoodAddon" class="addon-reveal-btn">Pesan Makanan Tambahan</button>
+    <div id="addonFoodGrid" class="addon-grid hidden"></div>
   </section>
 
   <section>
@@ -204,6 +206,17 @@
       <a id="btnWA" class="btn-wa" target="_blank">Kirim Bukti via WhatsApp</a>
 
       <button class="btn-close" onclick="closePayment()">Tutup</button>
+    </div>
+  </div>
+
+
+  <div id="addonConsentModal" class="modal hidden">
+    <div class="modal-content addon-consent-content">
+      <p class="addon-consent-text">☘️Menu Tambahan akan akan dibuatkan jam 19:00, setelah semua paket Cotar selesai☘️</p>
+      <div class="addon-consent-actions">
+        <button type="button" id="btnAddonAgree" class="addon-consent-agree">☘️Setuju☘️</button>
+        <button type="button" id="btnAddonDecline" class="addon-consent-decline">Tidak Setuju</button>
+      </div>
     </div>
   </div>
 
