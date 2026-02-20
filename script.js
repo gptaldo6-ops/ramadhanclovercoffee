@@ -79,38 +79,38 @@ const btnFoodAgree = document.getElementById("btnFoodAgree");
 const btnFoodDecline = document.getElementById("btnFoodDecline");
 
 const ADD_ON_ITEMS = [
-  { name: "Matcha Latte Ice", category: "Drink", price: 23000 },
-  { name: "Taro Latte Ice", category: "Drink", price: 20000 },
-  { name: "Choco Dubai", category: "Drink", price: 25000 },
-  { name: "Choco Milk Ice", category: "Drink", price: 20000 },
-  { name: "Cremento (1Liter)", category: "Drink", price: 80000 },
-  { name: "Cremento (250ml)", category: "Drink", price: 25000 },
-  { name: "Comiclo (1Liter)", category: "Drink", price: 80000 },
-  { name: "Comiclo (250ml)", category: "Drink", price: 20000 },
-  { name: "Cloren (1Liter)", category: "Drink", price: 80000 },
-  { name: "Cloren (250ml)", category: "Drink", price: 20000 },
-  { name: "Sweet Tea", category: "Drink", price: 15000 },
-  { name: "Lemon Tea", category: "Drink", price: 18000 },
-  { name: "Lychee Tea", category: "Drink", price: 20000 },
-  { name: "Peach Tea", category: "Drink", price: 20000 },
-  { name: "Javakisa", category: "Drink", price: 20000 },
-  { name: "Apple Rocl", category: "Drink", price: 20000 },
-  { name: "Rice", category: "Food", price: 5000 },
-  { name: "Mix Platter", category: "Food", price: 25000 },
-  { name: "Kentang Goreng", category: "Food", price: 22000 },
-  { name: "Dimsum Siomay Nori", category: "Food", price: 20000 },
-  { name: "Dimsum Siomay Ayam", category: "Food", price: 20000 },
-  { name: "Dimsum Siomay Mercon", category: "Food", price: 20000 },
-  { name: "Dimsum Siomay Kulit Tahu Ayam", category: "Food", price: 20000 },
-  { name: "Banana Split", category: "Food", price: 20000 },
-  { name: "Waffle", category: "Food", price: 25000 },
-  { name: "Cireng Bumbu Rujak", category: "Food", price: 20000 },
-  { name: "Keju Aroma", category: "Food", price: 20000 },
-  { name: "Matcha Cake", category: "Food", price: 25000 },
-  { name: "Choco Almond", category: "Food", price: 25000 },
-  { name: "Cheese Cake", category: "Food", price: 27000 },
-  { name: "Blueberry Cheese Cake", category: "Food", price: 29000 },
-  { name: "Ice Berg Cheese Cake", category: "Food", price: 33000 },
+  { name: "Matcha Latte Ice", category: "Drink", price: 23000, image: "" },
+  { name: "Taro Latte Ice", category: "Drink", price: 20000, image: "" },
+  { name: "Choco Dubai", category: "Drink", price: 25000, image: "" },
+  { name: "Choco Milk Ice", category: "Drink", price: 20000, image: "" },
+  { name: "Cremento (1Liter)", category: "Drink", price: 80000, image: "" },
+  { name: "Cremento (250ml)", category: "Drink", price: 25000, image: "" },
+  { name: "Comiclo (1Liter)", category: "Drink", price: 80000, image: "" },
+  { name: "Comiclo (250ml)", category: "Drink", price: 20000, image: "" },
+  { name: "Cloren (1Liter)", category: "Drink", price: 80000, image: "" },
+  { name: "Cloren (250ml)", category: "Drink", price: 20000, image: "" },
+  { name: "Sweet Tea", category: "Drink", price: 15000, image: "" },
+  { name: "Lemon Tea", category: "Drink", price: 18000, image: "" },
+  { name: "Lychee Tea", category: "Drink", price: 20000, image: "" },
+  { name: "Peach Tea", category: "Drink", price: 20000, image: "" },
+  { name: "Javakisa", category: "Drink", price: 20000, image: "" },
+  { name: "Apple Rocl", category: "Drink", price: 20000, image: "" },
+  { name: "Rice", category: "Food", price: 5000, image: "" },
+  { name: "Mix Platter", category: "Food", price: 25000, image: "" },
+  { name: "Kentang Goreng", category: "Food", price: 22000, image: "" },
+  { name: "Dimsum Siomay Nori", category: "Food", price: 20000, image: "" },
+  { name: "Dimsum Siomay Ayam", category: "Food", price: 20000, image: "" },
+  { name: "Dimsum Siomay Mercon", category: "Food", price: 20000, image: "" },
+  { name: "Dimsum Siomay Kulit Tahu Ayam", category: "Food", price: 20000, image: "" },
+  { name: "Banana Split", category: "Food", price: 20000, image: "" },
+  { name: "Waffle", category: "Food", price: 25000, image: "" },
+  { name: "Cireng Bumbu Rujak", category: "Food", price: 20000, image: "" },
+  { name: "Keju Aroma", category: "Food", price: 20000, image: "" },
+  { name: "Matcha Cake", category: "Food", price: 25000, image: "" },
+  { name: "Choco Almond", category: "Food", price: 25000, image: "" },
+  { name: "Cheese Cake", category: "Food", price: 27000, image: "" },
+  { name: "Blueberry Cheese Cake", category: "Food", price: 29000, image: "" },
+  { name: "Ice Berg Cheese Cake", category: "Food", price: 33000, image: "" },
 ];
 
 function getAdminSettings() {
@@ -346,8 +346,13 @@ function createAddonCard(item) {
   card.dataset.kategori = item.category;
   card.dataset.harga = String(item.price);
 
+  const addOnImageHtml = item.image
+    ? `<img src="${item.image}" alt="${item.name}" class="addon-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />`
+    : "";
+
   card.innerHTML = `
-    <div class="addon-img-dummy" aria-hidden="true"></div>
+    ${addOnImageHtml}
+    <div class="addon-img-dummy" aria-hidden="true" style="display:${item.image ? "none" : "block"}"></div>
     <p class="addon-name">${item.name}</p>
     <p class="addon-price">Rp${formatRupiah(item.price)}</p>
     <div class="qty-control addon-qty-control">
