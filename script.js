@@ -67,17 +67,16 @@ const maintenanceBanner = document.getElementById("maintenanceBanner");
 
 const addonDrinkGrid = document.getElementById("addonDrinkGrid");
 const addonFoodGrid = document.getElementById("addonFoodGrid");
+const addonDrinkWrap = document.getElementById("addonDrinkWrap");
+const addonFoodWrap = document.getElementById("addonFoodWrap");
 const btnShowDrinkAddon = document.getElementById("btnShowDrinkAddon");
 const btnShowFoodAddon = document.getElementById("btnShowFoodAddon");
-const addonConsentModal = document.getElementById("addonConsentModal");
-const btnAddonAgree = document.getElementById("btnAddonAgree");
-const btnAddonDecline = document.getElementById("btnAddonDecline");
-
-let pendingAddonCategory = null;
-const addonConsentState = {
-  Drink: false,
-  Food: false,
-};
+const drinkConsentInline = document.getElementById("drinkConsentInline");
+const foodConsentInline = document.getElementById("foodConsentInline");
+const btnDrinkAgree = document.getElementById("btnDrinkAgree");
+const btnDrinkDecline = document.getElementById("btnDrinkDecline");
+const btnFoodAgree = document.getElementById("btnFoodAgree");
+const btnFoodDecline = document.getElementById("btnFoodDecline");
 
 const ADD_ON_ITEMS = [
   { name: "Matcha Latte Ice", category: "Drink", price: 23000 },
@@ -396,35 +395,27 @@ function renderAddOnMenu() {
 
 function setAddonCategoryVisibility(category, isVisible) {
   const isDrink = category === "Drink";
-  const grid = isDrink ? addonDrinkGrid : addonFoodGrid;
-  const button = isDrink ? btnShowDrinkAddon : btnShowFoodAddon;
+  const wrap = isDrink ? addonDrinkWrap : addonFoodWrap;
 
-  if (grid) {
-    grid.classList.toggle("hidden", !isVisible);
+  if (!wrap) return;
+
+  wrap.classList.toggle("expanded", isVisible);
+  wrap.setAttribute("aria-hidden", isVisible ? "false" : "true");
+
+  if (isVisible) {
+    const grid = isDrink ? addonDrinkGrid : addonFoodGrid;
+    if (grid) {
+      const targetHeight = grid.scrollHeight + 12;
+      wrap.style.maxHeight = `${targetHeight}px`;
+    }
+  } else {
+    wrap.style.maxHeight = "0px";
   }
-
-  if (button) {
-    button.classList.toggle("hidden", isVisible);
-  }
-}
-
-function openAddonConsent(category) {
-  pendingAddonCategory = category;
-  if (!addonConsentModal) return;
-  addonConsentModal.classList.remove("hidden");
-  addonConsentModal.classList.add("modal-opening");
-}
-
-function closeAddonConsent() {
-  if (!addonConsentModal) return;
-  addonConsentModal.classList.add("hidden");
-  addonConsentModal.classList.remove("modal-opening");
-  pendingAddonCategory = null;
 }
 
 renderAddOnMenu();
-setAddonCategoryVisibility("Drink", addonConsentState.Drink);
-setAddonCategoryVisibility("Food", addonConsentState.Food);
+setAddonCategoryVisibility("Drink", false);
+setAddonCategoryVisibility("Food", false);
 
 updateSummary();
 applyBookingDateRange();
@@ -443,30 +434,57 @@ document.addEventListener("click", (event) => {
 });
 
 if (btnShowDrinkAddon) {
-  btnShowDrinkAddon.addEventListener("click", () => openAddonConsent("Drink"));
-}
-
-if (btnShowFoodAddon) {
-  btnShowFoodAddon.addEventListener("click", () => openAddonConsent("Food"));
-}
-
-if (btnAddonAgree) {
-  btnAddonAgree.addEventListener("click", () => {
-    if (!pendingAddonCategory) return;
-    addonConsentState[pendingAddonCategory] = true;
-    setAddonCategoryVisibility(pendingAddonCategory, true);
-    closeAddonConsent();
+  btnShowDrinkAddon.addEventListener("click", () => {
+    if (drinkConsentInline) {
+      drinkConsentInline.classList.remove("hidden");
+    }
   });
 }
 
-if (btnAddonDecline) {
-  btnAddonDecline.addEventListener("click", closeAddonConsent);
+if (btnShowFoodAddon) {
+  btnShowFoodAddon.addEventListener("click", () => {
+    if (foodConsentInline) {
+      foodConsentInline.classList.remove("hidden");
+    }
+  });
 }
 
-if (addonConsentModal) {
-  addonConsentModal.addEventListener("click", (event) => {
-    if (event.target === addonConsentModal) {
-      closeAddonConsent();
+if (btnDrinkAgree) {
+  btnDrinkAgree.addEventListener("click", () => {
+    setAddonCategoryVisibility("Drink", true);
+    if (drinkConsentInline) {
+      drinkConsentInline.classList.add("hidden");
+    }
+    if (btnShowDrinkAddon) {
+      btnShowDrinkAddon.classList.add("hidden");
+    }
+  });
+}
+
+if (btnFoodAgree) {
+  btnFoodAgree.addEventListener("click", () => {
+    setAddonCategoryVisibility("Food", true);
+    if (foodConsentInline) {
+      foodConsentInline.classList.add("hidden");
+    }
+    if (btnShowFoodAddon) {
+      btnShowFoodAddon.classList.add("hidden");
+    }
+  });
+}
+
+if (btnDrinkDecline) {
+  btnDrinkDecline.addEventListener("click", () => {
+    if (drinkConsentInline) {
+      drinkConsentInline.classList.add("hidden");
+    }
+  });
+}
+
+if (btnFoodDecline) {
+  btnFoodDecline.addEventListener("click", () => {
+    if (foodConsentInline) {
+      foodConsentInline.classList.add("hidden");
     }
   });
 }

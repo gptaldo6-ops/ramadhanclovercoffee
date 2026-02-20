@@ -162,11 +162,29 @@
 
     <h4 class="addon-subtitle">Drink</h4>
     <button type="button" id="btnShowDrinkAddon" class="addon-reveal-btn">Pesan Minuman Tambahan</button>
-    <div id="addonDrinkGrid" class="addon-grid hidden"></div>
+    <div id="drinkConsentInline" class="addon-consent-inline hidden">
+      <p class="addon-consent-text">☘️Menu Tambahan akan akan dibuatkan jam 19:00, setelah semua paket Cotar selesai☘️</p>
+      <div class="addon-consent-actions">
+        <button type="button" id="btnDrinkAgree" class="addon-consent-agree">☘️Setuju☘️</button>
+        <button type="button" id="btnDrinkDecline" class="addon-consent-decline">Tidak Setuju</button>
+      </div>
+    </div>
+    <div id="addonDrinkWrap" class="addon-expand-wrap" aria-hidden="true">
+      <div id="addonDrinkGrid" class="addon-grid"></div>
+    </div>
 
     <h4 class="addon-subtitle">Food</h4>
     <button type="button" id="btnShowFoodAddon" class="addon-reveal-btn">Pesan Makanan Tambahan</button>
-    <div id="addonFoodGrid" class="addon-grid hidden"></div>
+    <div id="foodConsentInline" class="addon-consent-inline hidden">
+      <p class="addon-consent-text">☘️Menu Tambahan akan akan dibuatkan jam 19:00, setelah semua paket Cotar selesai☘️</p>
+      <div class="addon-consent-actions">
+        <button type="button" id="btnFoodAgree" class="addon-consent-agree">☘️Setuju☘️</button>
+        <button type="button" id="btnFoodDecline" class="addon-consent-decline">Tidak Setuju</button>
+      </div>
+    </div>
+    <div id="addonFoodWrap" class="addon-expand-wrap" aria-hidden="true">
+      <div id="addonFoodGrid" class="addon-grid"></div>
+    </div>
   </section>
 
   <section>
@@ -210,15 +228,7 @@
   </div>
 
 
-  <div id="addonConsentModal" class="modal hidden">
-    <div class="modal-content addon-consent-content">
-      <p class="addon-consent-text">☘️Menu Tambahan akan akan dibuatkan jam 19:00, setelah semua paket Cotar selesai☘️</p>
-      <div class="addon-consent-actions">
-        <button type="button" id="btnAddonAgree" class="addon-consent-agree">☘️Setuju☘️</button>
-        <button type="button" id="btnAddonDecline" class="addon-consent-decline">Tidak Setuju</button>
-      </div>
-    </div>
-  </div>
+
 
   <div id="menuPreviewModal" class="modal hidden">
     <div class="modal-content modal-content-preview">
