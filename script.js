@@ -630,7 +630,7 @@ function startSubmitButtonLoading() {
 }
 
 function submitPendingPayloadToSheet() {
-  if (!pendingPayload) return;
+  if (!pendingPayload) return false;
 
   const latestSettings = getAdminSettings();
   if (isDateClosedByAdmin(pendingPayload.tanggal, latestSettings)) {
@@ -639,7 +639,7 @@ function submitPendingPayloadToSheet() {
     pendingPayload = null;
     applyBookingDateRange();
     renderMaintenanceBanner();
-    return;
+    return false;
   }
 
   const latestMaxPeople = getMaxPeopleForDate(pendingPayload.tanggal, latestSettings);
@@ -653,22 +653,33 @@ function submitPendingPayloadToSheet() {
   const form = document.createElement("form");
   form.method = "POST";
   form.action = API_URL;
+  form.target = targetFrame.name;
 
   Object.entries(pendingPayload).forEach(([key, value]) => {
     const input = document.createElement("input");
     input.type = "hidden";
     input.name = key;
     if (Array.isArray(value) || (value && typeof value === "object")) {
-      input.value = JSON.stringify(value);
-    } else {
-      input.value = String(value);
+      body.append(key, JSON.stringify(value));
+      return;
     }
-    form.appendChild(input);
+    body.append(key, String(value));
+  });
+
+  fetch(API_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body,
+    keepalive: true,
+  }).catch((error) => {
+    console.warn("Gagal mengirim data reservasi:", error);
   });
 
   document.body.appendChild(form);
   form.submit();
   form.remove();
+
+  return true;
 }
 
 function buildCotarQtyFields(paketList) {
@@ -828,6 +839,12 @@ function closePayment() {
 
 btnWA.addEventListener("click", (event) => {
   if (btnWA.dataset.locked === "1") {
+    event.preventDefault();
+    return;
+  }
+
+  const submitted = submitPendingPayloadToSheet();
+  if (!submitted) {
     event.preventDefault();
     return;
   }
