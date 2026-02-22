@@ -88,7 +88,7 @@ const ADD_ON_ITEMS = [
   { name: "Comiclo (1Liter)", category: "Drink", price: 80000, image: "./img/addon/comiclo-1liter.jpg" },
   { name: "Comiclo (250ml)", category: "Drink", price: 20000, image: "./img/addon/comiclo-250ml.jpg" },
   { name: "Cloren (1Liter)", category: "Drink", price: 80000, image: "./img/addon/cloren-1liter.jpg" },
-  { name: "Cloren (250ml)", category: "Drink", price: 20000, image: "./img/addon/cloren-250ml.jpg" },
+  { name: "Cloren (250ml)", category: "Drink", price: 23000, image: "./img/addon/cloren-250ml.jpg" },
   { name: "Sweet Tea", category: "Drink", price: 15000, image: "./img/addon/sweet-tea.jpg" },
   { name: "Lemon Tea", category: "Drink", price: 18000, image: "./img/addon/lemon-tea.jpg" },
   { name: "Lychee Tea", category: "Drink", price: 20000, image: "./img/addon/lychee-tea.jpg" },
