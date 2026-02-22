@@ -614,7 +614,7 @@ function startWaButtonLoading() {
 }
 
 function submitPendingPayloadToSheet() {
-  if (!pendingPayload) return;
+  if (!pendingPayload) return false;
 
   const payloadToSubmit = pendingPayload;
   pendingPayload = null;
@@ -625,19 +625,29 @@ function submitPendingPayloadToSheet() {
     closePayment();
     applyBookingDateRange();
     renderMaintenanceBanner();
-    return;
+    return false;
   }
 
   const latestMaxPeople = getMaxPeopleForDate(payloadToSubmit.tanggal, latestSettings);
   if (latestMaxPeople !== null && Number(payloadToSubmit.jumlah_orang) > latestMaxPeople) {
     alert(`Maksimal jumlah orang untuk tanggal ini adalah ${latestMaxPeople}`);
     closePayment();
-    return;
+    return false;
+  }
+
+  let targetFrame = document.getElementById("sheetSubmitFrame");
+  if (!targetFrame) {
+    targetFrame = document.createElement("iframe");
+    targetFrame.name = "sheetSubmitFrame";
+    targetFrame.id = "sheetSubmitFrame";
+    targetFrame.style.display = "none";
+    document.body.appendChild(targetFrame);
   }
 
   const form = document.createElement("form");
   form.method = "POST";
   form.action = API_URL;
+  form.target = targetFrame.name;
 
   Object.entries(payloadToSubmit).forEach(([key, value]) => {
     const input = document.createElement("input");
@@ -654,6 +664,8 @@ function submitPendingPayloadToSheet() {
   document.body.appendChild(form);
   form.submit();
   form.remove();
+
+  return true;
 }
 
 function buildCotarQtyFields(paketList) {
@@ -812,10 +824,13 @@ btnWA.addEventListener("click", (event) => {
     return;
   }
 
+  const submitted = submitPendingPayloadToSheet();
+  if (!submitted) {
+    event.preventDefault();
+    return;
+  }
+
   startWaButtonLoading();
-  setTimeout(() => {
-    submitPendingPayloadToSheet();
-  }, 7000);
 });
 
 window.closePayment = closePayment;
