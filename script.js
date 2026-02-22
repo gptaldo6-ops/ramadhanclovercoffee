@@ -601,20 +601,18 @@ function startWaButtonLoading() {
   btnWA.classList.add("loading");
   btnWA.setAttribute("aria-disabled", "true");
   btnWA.dataset.locked = "1";
-
-  const originalText = "Kirim Bukti via WhatsApp";
   btnWA.textContent = "Mengirim...";
+}
 
-  setTimeout(() => {
-    btnWA.classList.remove("loading");
-    btnWA.removeAttribute("aria-disabled");
-    btnWA.dataset.locked = "0";
-    btnWA.textContent = originalText;
-  }, 7000);
+function stopWaButtonLoading() {
+  btnWA.classList.remove("loading");
+  btnWA.removeAttribute("aria-disabled");
+  btnWA.dataset.locked = "0";
+  btnWA.textContent = "Kirim Bukti via WhatsApp";
 }
 
 function submitPendingPayloadToSheet() {
-  if (!pendingPayload) return;
+  if (!pendingPayload) return false;
 
   const payloadToSubmit = pendingPayload;
   pendingPayload = null;
@@ -625,14 +623,14 @@ function submitPendingPayloadToSheet() {
     closePayment();
     applyBookingDateRange();
     renderMaintenanceBanner();
-    return;
+    return false;
   }
 
   const latestMaxPeople = getMaxPeopleForDate(payloadToSubmit.tanggal, latestSettings);
   if (latestMaxPeople !== null && Number(payloadToSubmit.jumlah_orang) > latestMaxPeople) {
     alert(`Maksimal jumlah orang untuk tanggal ini adalah ${latestMaxPeople}`);
     closePayment();
-    return;
+    return false;
   }
 
   const form = document.createElement("form");
@@ -654,6 +652,7 @@ function submitPendingPayloadToSheet() {
   document.body.appendChild(form);
   form.submit();
   form.remove();
+  return true;
 }
 
 function buildCotarQtyFields(paketList) {
@@ -813,9 +812,10 @@ btnWA.addEventListener("click", (event) => {
   }
 
   startWaButtonLoading();
-  setTimeout(() => {
-    submitPendingPayloadToSheet();
-  }, 7000);
+  const isSubmitted = submitPendingPayloadToSheet();
+  if (!isSubmitted) {
+    stopWaButtonLoading();
+  }
 });
 
 window.closePayment = closePayment;
