@@ -72,3 +72,13 @@
   border: 1px solid #ccc;
   border-radius: 8px;
 }
+
+.monitor-section {
+  width: calc(100vw - 28px);
+  max-width: none;
+}
+
+#monitorTableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
