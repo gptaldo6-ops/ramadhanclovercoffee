@@ -635,7 +635,20 @@ function submitPendingPayloadToSheet() {
     return false;
   }
 
-  const body = new URLSearchParams();
+  let targetFrame = document.getElementById("sheetSubmitFrame");
+  if (!targetFrame) {
+    targetFrame = document.createElement("iframe");
+    targetFrame.name = "sheetSubmitFrame";
+    targetFrame.id = "sheetSubmitFrame";
+    targetFrame.style.display = "none";
+    document.body.appendChild(targetFrame);
+  }
+
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = API_URL;
+  form.target = targetFrame.name;
+
   Object.entries(payloadToSubmit).forEach(([key, value]) => {
     if (Array.isArray(value) || (value && typeof value === "object")) {
       body.append(key, JSON.stringify(value));
@@ -652,6 +665,10 @@ function submitPendingPayloadToSheet() {
   }).catch((error) => {
     console.warn("Gagal mengirim data reservasi:", error);
   });
+
+  document.body.appendChild(form);
+  form.submit();
+  form.remove();
 
   return true;
 }
