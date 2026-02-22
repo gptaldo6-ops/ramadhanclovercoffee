@@ -614,7 +614,7 @@ function startWaButtonLoading() {
 }
 
 function submitPendingPayloadToSheet() {
-  if (!pendingPayload) return;
+  if (!pendingPayload) return false;
 
   const payloadToSubmit = pendingPayload;
   pendingPayload = null;
@@ -625,35 +625,35 @@ function submitPendingPayloadToSheet() {
     closePayment();
     applyBookingDateRange();
     renderMaintenanceBanner();
-    return;
+    return false;
   }
 
   const latestMaxPeople = getMaxPeopleForDate(payloadToSubmit.tanggal, latestSettings);
   if (latestMaxPeople !== null && Number(payloadToSubmit.jumlah_orang) > latestMaxPeople) {
     alert(`Maksimal jumlah orang untuk tanggal ini adalah ${latestMaxPeople}`);
     closePayment();
-    return;
+    return false;
   }
 
-  const form = document.createElement("form");
-  form.method = "POST";
-  form.action = API_URL;
-
+  const body = new URLSearchParams();
   Object.entries(payloadToSubmit).forEach(([key, value]) => {
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = key;
     if (Array.isArray(value) || (value && typeof value === "object")) {
-      input.value = JSON.stringify(value);
-    } else {
-      input.value = String(value);
+      body.append(key, JSON.stringify(value));
+      return;
     }
-    form.appendChild(input);
+    body.append(key, String(value));
   });
 
-  document.body.appendChild(form);
-  form.submit();
-  form.remove();
+  fetch(API_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body,
+    keepalive: true,
+  }).catch((error) => {
+    console.warn("Gagal mengirim data reservasi:", error);
+  });
+
+  return true;
 }
 
 function buildCotarQtyFields(paketList) {
@@ -812,10 +812,13 @@ btnWA.addEventListener("click", (event) => {
     return;
   }
 
+  const submitted = submitPendingPayloadToSheet();
+  if (!submitted) {
+    event.preventDefault();
+    return;
+  }
+
   startWaButtonLoading();
-  setTimeout(() => {
-    submitPendingPayloadToSheet();
-  }, 7000);
 });
 
 window.closePayment = closePayment;
