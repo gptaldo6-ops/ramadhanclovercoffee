@@ -650,15 +650,20 @@ function submitPendingPayloadToSheet() {
   form.target = targetFrame.name;
 
   Object.entries(payloadToSubmit).forEach(([key, value]) => {
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = key;
     if (Array.isArray(value) || (value && typeof value === "object")) {
-      input.value = JSON.stringify(value);
-    } else {
-      input.value = String(value);
+      body.append(key, JSON.stringify(value));
+      return;
     }
-    form.appendChild(input);
+    body.append(key, String(value));
+  });
+
+  fetch(API_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body,
+    keepalive: true,
+  }).catch((error) => {
+    console.warn("Gagal mengirim data reservasi:", error);
   });
 
   document.body.appendChild(form);
