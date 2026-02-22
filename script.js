@@ -613,73 +613,47 @@ function startWaButtonLoading() {
   }, 7000);
 }
 
-function startSubmitButtonLoading() {
-  submitButton.classList.add("loading");
-  submitButton.setAttribute("aria-disabled", "true");
-  submitButton.disabled = true;
-
-  const originalText = "Reservasi Sekarang";
-  submitButton.textContent = "Memproses Reservasi...";
-
-  setTimeout(() => {
-    submitButton.classList.remove("loading");
-    submitButton.removeAttribute("aria-disabled");
-    submitButton.disabled = false;
-    submitButton.textContent = originalText;
-  }, 7000);
-}
-
 function submitPendingPayloadToSheet() {
-  if (!pendingPayload) return false;
+  if (!pendingPayload) return;
+
+  const payloadToSubmit = pendingPayload;
+  pendingPayload = null;
 
   const latestSettings = getAdminSettings();
-  if (isDateClosedByAdmin(pendingPayload.tanggal, latestSettings)) {
+  if (isDateClosedByAdmin(payloadToSubmit.tanggal, latestSettings)) {
     alert("Tanggal reservasi sudah ditutup admin. Silakan pilih tanggal lain.");
     closePayment();
-    pendingPayload = null;
     applyBookingDateRange();
     renderMaintenanceBanner();
-    return false;
+    return;
   }
 
-  const latestMaxPeople = getMaxPeopleForDate(pendingPayload.tanggal, latestSettings);
-  if (latestMaxPeople !== null && Number(pendingPayload.jumlah_orang) > latestMaxPeople) {
+  const latestMaxPeople = getMaxPeopleForDate(payloadToSubmit.tanggal, latestSettings);
+  if (latestMaxPeople !== null && Number(payloadToSubmit.jumlah_orang) > latestMaxPeople) {
     alert(`Maksimal jumlah orang untuk tanggal ini adalah ${latestMaxPeople}`);
     closePayment();
-    pendingPayload = null;
     return;
   }
 
   const form = document.createElement("form");
   form.method = "POST";
   form.action = API_URL;
-  form.target = targetFrame.name;
 
-  Object.entries(pendingPayload).forEach(([key, value]) => {
+  Object.entries(payloadToSubmit).forEach(([key, value]) => {
     const input = document.createElement("input");
     input.type = "hidden";
     input.name = key;
     if (Array.isArray(value) || (value && typeof value === "object")) {
-      body.append(key, JSON.stringify(value));
-      return;
+      input.value = JSON.stringify(value);
+    } else {
+      input.value = String(value);
     }
-    body.append(key, String(value));
-  });
-
-  fetch(API_URL, {
-    method: "POST",
-    mode: "no-cors",
-    body,
-    keepalive: true,
-  }).catch((error) => {
-    console.warn("Gagal mengirim data reservasi:", error);
+    form.appendChild(input);
   });
 
   document.body.appendChild(form);
   form.submit();
   form.remove();
-
-  return true;
 }
 
 function buildCotarQtyFields(paketList) {
@@ -806,11 +780,6 @@ submitButton.addEventListener("click", () => {
     total: totalHarga,
     addonTotal: totalAddOn,
   });
-
-  startSubmitButtonLoading();
-  setTimeout(() => {
-    submitPendingPayloadToSheet();
-  }, 7000);
 });
 
 function showPaymentPopup({ nama, tanggal, total, addonTotal = 0 }) {
@@ -843,13 +812,10 @@ btnWA.addEventListener("click", (event) => {
     return;
   }
 
-  const submitted = submitPendingPayloadToSheet();
-  if (!submitted) {
-    event.preventDefault();
-    return;
-  }
-
   startWaButtonLoading();
+  setTimeout(() => {
+    submitPendingPayloadToSheet();
+  }, 7000);
 });
 
 window.closePayment = closePayment;
