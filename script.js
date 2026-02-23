@@ -314,7 +314,7 @@ function updateSummary() {
     `;
   }
 
-  summaryContainer.innerHTML = html || "<p>Belum ada paket dipilih</p>";
+  summaryContainer.innerHTML = html || "<p>Belum ada pesanan dipilih</p>";
 }
 
 document.querySelectorAll("#paketList .paket-card").forEach((card) => {
@@ -748,12 +748,13 @@ submitButton.addEventListener("click", () => {
   }
 
   const paket = collectPaketData();
-  if (!paket.length) {
-    alert("Pilih paket");
+  const addOn = collectAddonData();
+
+  if (!paket.length && !addOn.length) {
+    alert("Pilih minimal 1 pesanan (paket atau add on)");
     return;
   }
 
-  const addOn = collectAddonData();
   const cotarQtyFields = buildCotarQtyFields(paket);
   const totalHarga = paket.reduce((sum, item) => sum + item.harga * item.qty, 0);
   const totalAddOn = addOn.reduce((sum, item) => sum + item.harga * item.qty, 0);
