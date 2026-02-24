@@ -237,6 +237,8 @@ async function setReservationHistory(history) {
     console.warn("Gagal sinkron history reservasi ke server:", error);
     alert("History cadangan tersimpan lokal, tapi gagal sync ke server.");
   }
+function setReservationHistory(history) {
+  localStorage.setItem(RESERVATION_HISTORY_KEY, JSON.stringify(history));
 }
 
 function escapeHtml(value) {
