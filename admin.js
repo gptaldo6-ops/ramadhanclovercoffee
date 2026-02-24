@@ -313,6 +313,7 @@ function renderReservationHistoryTable() {
         <td>${escapeHtml(getReservationId(row, sourceIndex))}</td>
         <td>${escapeHtml(row.nama || "-")}</td>
         <td>${escapeHtml(row.tanggal || "-")}</td>
+        <td>${escapeHtml(row.backup_source === "reservasi_sekarang" ? "Reservasi Sekarang" : "Cadangan")}</td>
         <td>${buildOrderItemsHtml(row)}</td>
         <td><button type="button" class="history-delete-btn" data-index="${sourceIndex}">Hapus</button></td>
       </tr>
@@ -326,6 +327,7 @@ function renderReservationHistoryTable() {
           <th>ID Reservasi</th>
           <th>Nama</th>
           <th>Tanggal</th>
+          <th>Sumber</th>
           <th>Dropdown Pesanan</th>
           <th>Aksi</th>
         </tr>

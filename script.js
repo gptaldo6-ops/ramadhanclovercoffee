@@ -634,6 +634,14 @@ function saveReservationBackup(payload) {
   }
 }
 
+function buildReservationBackupPayload(basePayload) {
+  return {
+    ...basePayload,
+    backup_created_at: new Date().toISOString(),
+    backup_source: "reservasi_sekarang",
+  };
+}
+
 
 
 const RESERVATION_HISTORY_FALLBACK_KEY = "__reservation_history_backup";
@@ -869,10 +877,7 @@ submitButton.addEventListener("click", () => {
     ...cotarQtyFields,
   };
 
-  const backupPayload = {
-    ...pendingPayload,
-    backup_created_at: new Date().toISOString(),
-  };
+  const backupPayload = buildReservationBackupPayload(pendingPayload);
 
   saveReservationBackup(backupPayload);
   void appendReservationBackupToServer(backupPayload);
