@@ -359,6 +359,7 @@ async function showDashboard() {
   }
 
   renderAdminUI();
+  void syncReservationHistoryFromServer();
 }
 
 function showLogin() {
@@ -366,6 +367,27 @@ function showLogin() {
   loginSection.classList.remove("hidden");
 }
 
+
+async function syncReservationHistoryFromServer() {
+  try {
+    const remoteSettings = await fetchSharedAdminSettings();
+    const current = getAdminSettings();
+    const nextHistory = Array.isArray(remoteSettings.reservationHistoryBackup)
+      ? remoteSettings.reservationHistoryBackup
+      : [];
+
+    const merged = {
+      ...current,
+      reservationHistoryBackup: nextHistory,
+    };
+
+    setAdminSettings(merged);
+    localStorage.setItem(RESERVATION_HISTORY_KEY, JSON.stringify(nextHistory));
+    renderReservationHistoryTable();
+  } catch (error) {
+    console.warn("Gagal sinkron history reservasi dari server:", error);
+  }
+}
 function isDateFull(dateValue, groupsByDate, settings) {
   const manualValue = Number(settings.manualReservedByDate?.[dateValue]);
   if (Number.isFinite(manualValue) && manualValue >= 0) {
@@ -550,6 +572,12 @@ btnLogout.addEventListener("click", () => {
   localStorage.removeItem(ADMIN_AUTH_KEY);
   showLogin();
 });
+
+
+setInterval(() => {
+  if (localStorage.getItem(ADMIN_AUTH_KEY) !== "1") return;
+  void syncReservationHistoryFromServer();
+}, 5000);
 
 if (localStorage.getItem(ADMIN_AUTH_KEY) === "1") {
   void showDashboard();
