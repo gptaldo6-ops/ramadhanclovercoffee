@@ -237,17 +237,15 @@ async function setReservationHistory(history) {
     console.warn("Gagal sinkron history reservasi ke server:", error);
     alert("History cadangan tersimpan lokal, tapi gagal sync ke server.");
   }
-function setReservationHistory(history) {
-  localStorage.setItem(RESERVATION_HISTORY_KEY, JSON.stringify(history));
 }
 
 function escapeHtml(value) {
   return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function buildOrderItemsHtml(row) {
