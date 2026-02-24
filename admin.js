@@ -13,6 +13,7 @@ function normalizeAdminSettings(parsed) {
     closedDates: Array.isArray(parsed.closedDates) ? parsed.closedDates : [],
     manualReservedByDate: parsed.manualReservedByDate && typeof parsed.manualReservedByDate === "object" ? parsed.manualReservedByDate : {},
     maxPeopleByDate: parsed.maxPeopleByDate && typeof parsed.maxPeopleByDate === "object" ? parsed.maxPeopleByDate : {},
+    reservationHistoryBackup: Array.isArray(parsed.reservationHistoryBackup) ? parsed.reservationHistoryBackup : [],
   };
 }
 
@@ -61,6 +62,7 @@ const btnLogout = document.getElementById("btnLogout");
 const siteClosedInput = document.getElementById("siteClosed");
 const dateToggleGrid = document.getElementById("dateToggleGrid");
 const monitorTableWrap = document.getElementById("monitorTableWrap");
+const reservationHistoryWrap = document.getElementById("reservationHistoryWrap");
 
 const ADMIN_HASH_PARTS = [
   "3d985db745e09e72",
@@ -195,6 +197,7 @@ function getAdminSettings() {
       closedDates: [],
       manualReservedByDate: {},
       maxPeopleByDate: {},
+      reservationHistoryBackup: [],
     };
   }
 }
@@ -204,12 +207,117 @@ function setAdminSettings(settings) {
 }
 
 function getReservationHistory() {
+  const settings = getAdminSettings();
+  if (Array.isArray(settings.reservationHistoryBackup)) {
+    return settings.reservationHistoryBackup;
+  }
+
   try {
     const raw = localStorage.getItem(RESERVATION_HISTORY_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
+}
+
+async function setReservationHistory(history) {
+  const current = getAdminSettings();
+  const normalizedHistory = Array.isArray(history) ? history : [];
+  const updated = {
+    ...current,
+    reservationHistoryBackup: normalizedHistory,
+  };
+
+  localStorage.setItem(RESERVATION_HISTORY_KEY, JSON.stringify(normalizedHistory));
+  setAdminSettings(updated);
+
+  try {
+    await saveSharedAdminSettings(updated);
+  } catch (error) {
+    console.warn("Gagal sinkron history reservasi ke server:", error);
+    alert("History cadangan tersimpan lokal, tapi gagal sync ke server.");
+  }
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function buildOrderItemsHtml(row) {
+  const paketItems = Array.isArray(row.paket)
+    ? row.paket.map((item) => `Paket: ${item.namaPaket || "-"} × ${Number(item.qty || 0)}`)
+    : [];
+
+  const addOnItems = Array.isArray(row.add_on)
+    ? row.add_on.map((item) => `Add On: ${item.namaAddOn || "-"} × ${Number(item.qty || 0)}`)
+    : [];
+
+  const allItems = [...paketItems, ...addOnItems];
+  if (!allItems.length) {
+    return "<span>Tidak ada data pesanan</span>";
+  }
+
+  return `<details class="order-dropdown"><summary>Lihat Pesanan (${allItems.length})</summary><ul>${allItems.map((text) => `<li>${escapeHtml(text)}</li>`).join("")}</ul></details>`;
+}
+
+function getReservationId(row, index) {
+  if (row && row.reservation_id) return String(row.reservation_id);
+  const stamp = row && row.backup_created_at ? String(row.backup_created_at).replace(/[^0-9]/g, "").slice(0, 14) : "";
+  return stamp ? `RSV-${stamp}` : `RSV-${index + 1}`;
+}
+
+function renderReservationHistoryTable() {
+  if (!reservationHistoryWrap) return;
+
+  const history = getReservationHistory();
+  if (!Array.isArray(history) || history.length === 0) {
+    reservationHistoryWrap.innerHTML = '<p class="hint">Belum ada history reservasi cadangan.</p>';
+    return;
+  }
+
+  const rows = [...history].reverse().map((row, reverseIndex) => {
+    const sourceIndex = history.length - 1 - reverseIndex;
+    return `
+      <tr>
+        <td>${escapeHtml(getReservationId(row, sourceIndex))}</td>
+        <td>${escapeHtml(row.nama || "-")}</td>
+        <td>${escapeHtml(row.tanggal || "-")}</td>
+        <td>${buildOrderItemsHtml(row)}</td>
+        <td><button type="button" class="history-delete-btn" data-index="${sourceIndex}">Hapus</button></td>
+      </tr>
+    `;
+  });
+
+  reservationHistoryWrap.innerHTML = `
+    <table class="monitor-table">
+      <thead>
+        <tr>
+          <th>ID Reservasi</th>
+          <th>Nama</th>
+          <th>Tanggal</th>
+          <th>Dropdown Pesanan</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody>${rows.join("")}</tbody>
+    </table>
+  `;
+
+  reservationHistoryWrap.querySelectorAll('.history-delete-btn').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const index = Number(button.dataset.index);
+      const currentHistory = getReservationHistory();
+      if (!Array.isArray(currentHistory) || !Number.isInteger(index) || index < 0 || index >= currentHistory.length) return;
+      currentHistory.splice(index, 1);
+      await setReservationHistory(currentHistory);
+      renderAdminUI();
+    });
+  });
 }
 
 function getReservationGroupsByDate() {
@@ -242,6 +350,10 @@ async function showDashboard() {
   try {
     const remoteSettings = await fetchSharedAdminSettings();
     setAdminSettings(remoteSettings);
+    localStorage.setItem(
+      RESERVATION_HISTORY_KEY,
+      JSON.stringify(Array.isArray(remoteSettings.reservationHistoryBackup) ? remoteSettings.reservationHistoryBackup : []),
+    );
   } catch (error) {
     console.warn("Gagal sinkron dari server, memakai cache lokal:", error);
   }
@@ -371,6 +483,7 @@ function renderAdminUI() {
   siteClosedInput.checked = settings.siteClosed;
   renderDateToggleGrid(settings);
   renderMonitoringTable(settings);
+  renderReservationHistoryTable();
 }
 
 btnLogin.addEventListener("click", async () => {
@@ -415,6 +528,9 @@ btnSave.addEventListener("click", async () => {
     siteClosed: siteClosedInput.checked,
     manualReservedByDate,
     maxPeopleByDate,
+    reservationHistoryBackup: Array.isArray(current.reservationHistoryBackup)
+      ? current.reservationHistoryBackup
+      : [],
   };
 
   setAdminSettings(updated);
