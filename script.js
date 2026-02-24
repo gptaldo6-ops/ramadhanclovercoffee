@@ -1,6 +1,7 @@
 let pendingPayload = null;
 
 const ADMIN_SETTINGS_KEY = "ramadhan_admin_settings";
+const RESERVATION_HISTORY_KEY = "ramadhan_reservation_history";
 
 const API_URL =
   "https://script.google.com/macros/s/AKfycbxJWjkbqXoxGfxZqZdq3O6RHqtmJ-cfp_PNNanwAfKNZBbi6XgcUxr6NE6ZepUTa5Xw/exec";
@@ -611,6 +612,18 @@ function stopWaButtonLoading() {
   btnWA.textContent = "Kirim Bukti via WhatsApp";
 }
 
+function saveReservationBackup(payload) {
+  try {
+    const raw = localStorage.getItem(RESERVATION_HISTORY_KEY);
+    const history = raw ? JSON.parse(raw) : [];
+    const nextHistory = Array.isArray(history) ? history : [];
+    nextHistory.push(payload);
+    localStorage.setItem(RESERVATION_HISTORY_KEY, JSON.stringify(nextHistory));
+  } catch {
+    // Abaikan gagal simpan backup lokal.
+  }
+}
+
 function submitPendingPayloadToSheet() {
   if (!pendingPayload) return false;
 
@@ -758,8 +771,10 @@ submitButton.addEventListener("click", () => {
   const cotarQtyFields = buildCotarQtyFields(paket);
   const totalHarga = paket.reduce((sum, item) => sum + item.harga * item.qty, 0);
   const totalAddOn = addOn.reduce((sum, item) => sum + item.harga * item.qty, 0);
+  const reservationId = `RSV-${Date.now()}`;
 
   pendingPayload = {
+    reservation_id: reservationId,
     nama,
     whatsapp,
     tanggal,
@@ -773,6 +788,11 @@ submitButton.addEventListener("click", () => {
     addonTotalHarga: totalAddOn,
     ...cotarQtyFields,
   };
+
+  saveReservationBackup({
+    ...pendingPayload,
+    backup_created_at: new Date().toISOString(),
+  });
 
   showPaymentPopup({
     nama,
