@@ -1,6 +1,7 @@
 const ADMIN_AUTH_KEY = "ramadhan_admin_auth";
 const ADMIN_SETTINGS_KEY = "ramadhan_admin_settings";
 const RESERVATION_HISTORY_KEY = "ramadhan_reservation_history";
+const RESERVATION_HISTORY_FALLBACK_KEY = "__reservation_history_backup";
 
 const API_URL =
   "https://script.google.com/macros/s/AKfycbxJWjkbqXoxGfxZqZdq3O6RHqtmJ-cfp_PNNanwAfKNZBbi6XgcUxr6NE6ZepUTa5Xw/exec";
@@ -206,10 +207,29 @@ function setAdminSettings(settings) {
   localStorage.setItem(ADMIN_SETTINGS_KEY, JSON.stringify(settings));
 }
 
+
+function getReservationHistoryFromSettings(settings) {
+  if (Array.isArray(settings?.reservationHistoryBackup)) {
+    return settings.reservationHistoryBackup;
+  }
+
+  const rawFallback = settings?.manualReservedByDate?.[RESERVATION_HISTORY_FALLBACK_KEY];
+  if (typeof rawFallback === "string") {
+    try {
+      const parsed = JSON.parse(rawFallback);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
 function getReservationHistory() {
   const settings = getAdminSettings();
-  if (Array.isArray(settings.reservationHistoryBackup)) {
-    return settings.reservationHistoryBackup;
+  const settingsHistory = getReservationHistoryFromSettings(settings);
+  if (settingsHistory.length) {
+    return settingsHistory;
   }
 
   try {
@@ -226,6 +246,12 @@ async function setReservationHistory(history) {
   const updated = {
     ...current,
     reservationHistoryBackup: normalizedHistory,
+    manualReservedByDate: {
+      ...(current.manualReservedByDate && typeof current.manualReservedByDate === "object"
+        ? current.manualReservedByDate
+        : {}),
+      [RESERVATION_HISTORY_FALLBACK_KEY]: JSON.stringify(normalizedHistory),
+    },
   };
 
   localStorage.setItem(RESERVATION_HISTORY_KEY, JSON.stringify(normalizedHistory));
@@ -352,7 +378,7 @@ async function showDashboard() {
     setAdminSettings(remoteSettings);
     localStorage.setItem(
       RESERVATION_HISTORY_KEY,
-      JSON.stringify(Array.isArray(remoteSettings.reservationHistoryBackup) ? remoteSettings.reservationHistoryBackup : []),
+      JSON.stringify(getReservationHistoryFromSettings(remoteSettings)),
     );
   } catch (error) {
     console.warn("Gagal sinkron dari server, memakai cache lokal:", error);
@@ -372,13 +398,17 @@ async function syncReservationHistoryFromServer() {
   try {
     const remoteSettings = await fetchSharedAdminSettings();
     const current = getAdminSettings();
-    const nextHistory = Array.isArray(remoteSettings.reservationHistoryBackup)
-      ? remoteSettings.reservationHistoryBackup
-      : [];
+    const nextHistory = getReservationHistoryFromSettings(remoteSettings);
 
     const merged = {
       ...current,
       reservationHistoryBackup: nextHistory,
+      manualReservedByDate: {
+        ...(current.manualReservedByDate && typeof current.manualReservedByDate === "object"
+          ? current.manualReservedByDate
+          : {}),
+        [RESERVATION_HISTORY_FALLBACK_KEY]: JSON.stringify(nextHistory),
+      },
     };
 
     setAdminSettings(merged);
@@ -553,6 +583,12 @@ btnSave.addEventListener("click", async () => {
     reservationHistoryBackup: Array.isArray(current.reservationHistoryBackup)
       ? current.reservationHistoryBackup
       : [],
+    manualReservedByDate: {
+      ...manualReservedByDate,
+      [RESERVATION_HISTORY_FALLBACK_KEY]: JSON.stringify(
+        Array.isArray(current.reservationHistoryBackup) ? current.reservationHistoryBackup : [],
+      ),
+    },
   };
 
   setAdminSettings(updated);

@@ -33,6 +33,10 @@ function normalizeAdminSettings(parsed) {
       parsed.maxPeopleByDate && typeof parsed.maxPeopleByDate === "object"
         ? parsed.maxPeopleByDate
         : {},
+    manualReservedByDate:
+      parsed.manualReservedByDate && typeof parsed.manualReservedByDate === "object"
+        ? parsed.manualReservedByDate
+        : {},
     reservationHistoryBackup: Array.isArray(parsed.reservationHistoryBackup)
       ? parsed.reservationHistoryBackup
       : [],
@@ -128,6 +132,7 @@ function getAdminSettings() {
       siteClosed: false,
       closedDates: [],
       maxPeopleByDate: {},
+      manualReservedByDate: {},
       reservationHistoryBackup: [],
     };
   }
@@ -630,13 +635,30 @@ function saveReservationBackup(payload) {
 }
 
 
+
+const RESERVATION_HISTORY_FALLBACK_KEY = "__reservation_history_backup";
+
+function getReservationHistoryFromSettings(settings) {
+  if (Array.isArray(settings.reservationHistoryBackup)) {
+    return settings.reservationHistoryBackup;
+  }
+
+  const rawFallback = settings?.manualReservedByDate?.[RESERVATION_HISTORY_FALLBACK_KEY];
+  if (typeof rawFallback === "string") {
+    try {
+      const parsed = JSON.parse(rawFallback);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
 async function appendReservationBackupToServer(payload) {
   try {
     const remoteSettings = normalizeAdminSettings(await fetchSharedAdminSettings());
-    const currentHistory = Array.isArray(remoteSettings.reservationHistoryBackup)
-      ? remoteSettings.reservationHistoryBackup
-      : [];
-
+    const currentHistory = getReservationHistoryFromSettings(remoteSettings);
     const nextHistory = [...currentHistory, payload].slice(-300);
 
     const body = new URLSearchParams({
@@ -644,6 +666,12 @@ async function appendReservationBackupToServer(payload) {
       settings: JSON.stringify({
         ...remoteSettings,
         reservationHistoryBackup: nextHistory,
+        manualReservedByDate: {
+          ...(remoteSettings.manualReservedByDate && typeof remoteSettings.manualReservedByDate === "object"
+            ? remoteSettings.manualReservedByDate
+            : {}),
+          [RESERVATION_HISTORY_FALLBACK_KEY]: JSON.stringify(nextHistory),
+        },
       }),
     });
 
@@ -664,6 +692,12 @@ async function appendReservationBackupToServer(payload) {
       JSON.stringify({
         ...remoteSettings,
         reservationHistoryBackup: nextHistory,
+        manualReservedByDate: {
+          ...(remoteSettings.manualReservedByDate && typeof remoteSettings.manualReservedByDate === "object"
+            ? remoteSettings.manualReservedByDate
+            : {}),
+          [RESERVATION_HISTORY_FALLBACK_KEY]: JSON.stringify(nextHistory),
+        },
       }),
     );
   } catch (error) {
