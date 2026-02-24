@@ -61,6 +61,7 @@ const btnLogout = document.getElementById("btnLogout");
 const siteClosedInput = document.getElementById("siteClosed");
 const dateToggleGrid = document.getElementById("dateToggleGrid");
 const monitorTableWrap = document.getElementById("monitorTableWrap");
+const reservationHistoryWrap = document.getElementById("reservationHistoryWrap");
 
 const ADMIN_HASH_PARTS = [
   "3d985db745e09e72",
@@ -210,6 +211,91 @@ function getReservationHistory() {
   } catch {
     return [];
   }
+}
+
+function setReservationHistory(history) {
+  localStorage.setItem(RESERVATION_HISTORY_KEY, JSON.stringify(history));
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function buildOrderItemsHtml(row) {
+  const paketItems = Array.isArray(row.paket)
+    ? row.paket.map((item) => `Paket: ${item.namaPaket || "-"} × ${Number(item.qty || 0)}`)
+    : [];
+
+  const addOnItems = Array.isArray(row.add_on)
+    ? row.add_on.map((item) => `Add On: ${item.namaAddOn || "-"} × ${Number(item.qty || 0)}`)
+    : [];
+
+  const allItems = [...paketItems, ...addOnItems];
+  if (!allItems.length) {
+    return "<span>Tidak ada data pesanan</span>";
+  }
+
+  return `<details class="order-dropdown"><summary>Lihat Pesanan (${allItems.length})</summary><ul>${allItems.map((text) => `<li>${escapeHtml(text)}</li>`).join("")}</ul></details>`;
+}
+
+function getReservationId(row, index) {
+  if (row && row.reservation_id) return String(row.reservation_id);
+  const stamp = row && row.backup_created_at ? String(row.backup_created_at).replace(/[^0-9]/g, "").slice(0, 14) : "";
+  return stamp ? `RSV-${stamp}` : `RSV-${index + 1}`;
+}
+
+function renderReservationHistoryTable() {
+  if (!reservationHistoryWrap) return;
+
+  const history = getReservationHistory();
+  if (!Array.isArray(history) || history.length === 0) {
+    reservationHistoryWrap.innerHTML = '<p class="hint">Belum ada history reservasi cadangan.</p>';
+    return;
+  }
+
+  const rows = [...history].reverse().map((row, reverseIndex) => {
+    const sourceIndex = history.length - 1 - reverseIndex;
+    return `
+      <tr>
+        <td>${escapeHtml(getReservationId(row, sourceIndex))}</td>
+        <td>${escapeHtml(row.nama || "-")}</td>
+        <td>${escapeHtml(row.tanggal || "-")}</td>
+        <td>${buildOrderItemsHtml(row)}</td>
+        <td><button type="button" class="history-delete-btn" data-index="${sourceIndex}">Hapus</button></td>
+      </tr>
+    `;
+  });
+
+  reservationHistoryWrap.innerHTML = `
+    <table class="monitor-table">
+      <thead>
+        <tr>
+          <th>ID Reservasi</th>
+          <th>Nama</th>
+          <th>Tanggal</th>
+          <th>Dropdown Pesanan</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody>${rows.join("")}</tbody>
+    </table>
+  `;
+
+  reservationHistoryWrap.querySelectorAll('.history-delete-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      const index = Number(button.dataset.index);
+      const currentHistory = getReservationHistory();
+      if (!Array.isArray(currentHistory) || !Number.isInteger(index) || index < 0 || index >= currentHistory.length) return;
+      currentHistory.splice(index, 1);
+      setReservationHistory(currentHistory);
+      renderAdminUI();
+    });
+  });
 }
 
 function getReservationGroupsByDate() {
@@ -371,6 +457,7 @@ function renderAdminUI() {
   siteClosedInput.checked = settings.siteClosed;
   renderDateToggleGrid(settings);
   renderMonitoringTable(settings);
+  renderReservationHistoryTable();
 }
 
 btnLogin.addEventListener("click", async () => {

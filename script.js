@@ -771,8 +771,10 @@ submitButton.addEventListener("click", () => {
   const cotarQtyFields = buildCotarQtyFields(paket);
   const totalHarga = paket.reduce((sum, item) => sum + item.harga * item.qty, 0);
   const totalAddOn = addOn.reduce((sum, item) => sum + item.harga * item.qty, 0);
+  const reservationId = `RSV-${Date.now()}`;
 
   pendingPayload = {
+    reservation_id: reservationId,
     nama,
     whatsapp,
     tanggal,
