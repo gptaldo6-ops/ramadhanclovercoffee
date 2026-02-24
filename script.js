@@ -1,11 +1,13 @@
 let pendingPayload = null;
 
 const ADMIN_SETTINGS_KEY = "ramadhan_admin_settings";
+const RESERVATION_HISTORY_KEY = "ramadhan_reservation_history";
 
 const API_URL =
   "https://script.google.com/macros/s/AKfycbxJWjkbqXoxGfxZqZdq3O6RHqtmJ-cfp_PNNanwAfKNZBbi6XgcUxr6NE6ZepUTa5Xw/exec";
 
 const ADMIN_SETTINGS_ACTION_GET = "getAdminSettings";
+const ADMIN_SETTINGS_ACTION_SET = "setAdminSettings";
 
 async function fetchSharedAdminSettings() {
   const response = await fetch(`${API_URL}?action=${ADMIN_SETTINGS_ACTION_GET}`, {
@@ -31,6 +33,13 @@ function normalizeAdminSettings(parsed) {
       parsed.maxPeopleByDate && typeof parsed.maxPeopleByDate === "object"
         ? parsed.maxPeopleByDate
         : {},
+    manualReservedByDate:
+      parsed.manualReservedByDate && typeof parsed.manualReservedByDate === "object"
+        ? parsed.manualReservedByDate
+        : {},
+    reservationHistoryBackup: Array.isArray(parsed.reservationHistoryBackup)
+      ? parsed.reservationHistoryBackup
+      : [],
   };
 }
 
@@ -123,6 +132,8 @@ function getAdminSettings() {
       siteClosed: false,
       closedDates: [],
       maxPeopleByDate: {},
+      manualReservedByDate: {},
+      reservationHistoryBackup: [],
     };
   }
 }
@@ -611,6 +622,88 @@ function stopWaButtonLoading() {
   btnWA.textContent = "Kirim Bukti via WhatsApp";
 }
 
+function saveReservationBackup(payload) {
+  try {
+    const raw = localStorage.getItem(RESERVATION_HISTORY_KEY);
+    const history = raw ? JSON.parse(raw) : [];
+    const nextHistory = Array.isArray(history) ? history : [];
+    nextHistory.push(payload);
+    localStorage.setItem(RESERVATION_HISTORY_KEY, JSON.stringify(nextHistory));
+  } catch {
+    // Abaikan gagal simpan backup lokal.
+  }
+}
+
+
+
+const RESERVATION_HISTORY_FALLBACK_KEY = "__reservation_history_backup";
+
+function getReservationHistoryFromSettings(settings) {
+  if (Array.isArray(settings.reservationHistoryBackup)) {
+    return settings.reservationHistoryBackup;
+  }
+
+  const rawFallback = settings?.manualReservedByDate?.[RESERVATION_HISTORY_FALLBACK_KEY];
+  if (typeof rawFallback === "string") {
+    try {
+      const parsed = JSON.parse(rawFallback);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
+async function appendReservationBackupToServer(payload) {
+  try {
+    const remoteSettings = normalizeAdminSettings(await fetchSharedAdminSettings());
+    const currentHistory = getReservationHistoryFromSettings(remoteSettings);
+    const nextHistory = [...currentHistory, payload].slice(-300);
+
+    const body = new URLSearchParams({
+      action: ADMIN_SETTINGS_ACTION_SET,
+      settings: JSON.stringify({
+        ...remoteSettings,
+        reservationHistoryBackup: nextHistory,
+        manualReservedByDate: {
+          ...(remoteSettings.manualReservedByDate && typeof remoteSettings.manualReservedByDate === "object"
+            ? remoteSettings.manualReservedByDate
+            : {}),
+          [RESERVATION_HISTORY_FALLBACK_KEY]: JSON.stringify(nextHistory),
+        },
+      }),
+    });
+
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+      },
+      body,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Gagal sinkron backup reservasi (${response.status})`);
+    }
+
+    localStorage.setItem(
+      ADMIN_SETTINGS_KEY,
+      JSON.stringify({
+        ...remoteSettings,
+        reservationHistoryBackup: nextHistory,
+        manualReservedByDate: {
+          ...(remoteSettings.manualReservedByDate && typeof remoteSettings.manualReservedByDate === "object"
+            ? remoteSettings.manualReservedByDate
+            : {}),
+          [RESERVATION_HISTORY_FALLBACK_KEY]: JSON.stringify(nextHistory),
+        },
+      }),
+    );
+  } catch (error) {
+    console.warn("Sinkron backup reservasi ke server gagal:", error);
+  }
+}
 function submitPendingPayloadToSheet() {
   if (!pendingPayload) return false;
 
@@ -758,8 +851,10 @@ submitButton.addEventListener("click", () => {
   const cotarQtyFields = buildCotarQtyFields(paket);
   const totalHarga = paket.reduce((sum, item) => sum + item.harga * item.qty, 0);
   const totalAddOn = addOn.reduce((sum, item) => sum + item.harga * item.qty, 0);
+  const reservationId = `RSV-${Date.now()}`;
 
   pendingPayload = {
+    reservation_id: reservationId,
     nama,
     whatsapp,
     tanggal,
@@ -773,6 +868,14 @@ submitButton.addEventListener("click", () => {
     addonTotalHarga: totalAddOn,
     ...cotarQtyFields,
   };
+
+  const backupPayload = {
+    ...pendingPayload,
+    backup_created_at: new Date().toISOString(),
+  };
+
+  saveReservationBackup(backupPayload);
+  void appendReservationBackupToServer(backupPayload);
 
   showPaymentPopup({
     nama,
