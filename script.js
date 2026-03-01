@@ -105,7 +105,7 @@ const ADD_ON_ITEMS = [
   { name: "Javakisa", category: "Drink", price: 20000, image: "./img/addon/javakisa.jpg" },
   { name: "Apple Rock", category: "Drink", price: 20000, image: "./img/addon/apple-rocl.jpg" },
   { name: "Mie Nyemek, category: "Food", price: 23000, image: "./img/addon/mie.jpg" },
-  { name: "Bolognese", category: "Food", price: 30000, image: "./img/addon/bolognese.jpg" },
+  { name: "Spaghetti Bolognese", category: "Food", price: 30000, image: "./img/addon/bolognese.jpg" },
   { name: "Nasi", category: "Food", price: 5000, image: "./img/addon/rice.jpg" },
   { name: "Mix Platter", category: "Food", price: 25000, image: "./img/addon/mix-platter.jpg" },
   { name: "Kentang Goreng", category: "Food", price: 22000, image: "./img/addon/kentang-goreng.jpg" },
