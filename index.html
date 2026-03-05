@@ -13,8 +13,9 @@
 
   <img src="img/TextReservasi.png" alt="Text Reservasi" class="head-text" />
 
-  <section>
-    <h3>Data Pemesan</h3>
+  <section class="section-data-pemesan-highlight">
+    <h3>Lengkapi Data Reservasi</h3>
+    <p class="section-highlight-note">Pastikan data ini terisi sebelum pilih paket.</p>
 
     <label>
       Nama<br />
@@ -26,10 +27,9 @@
       Nomor WhatsApp<br />
       <input type="tel" id="whatsapp" placeholder="08xxxxxxxxxx" />
     </label>
-  </section>
+    <br /><br />
 
-  <section class="section-tanggal">
-    <h3>Pilih Tanggal</h3>
+    <h3 class="subsection-title">Pilih Tanggal</h3>
     <input type="hidden" id="tanggal" />
     <div class="tanggal-dropdown">
       <button type="button" id="tanggalTrigger" class="tanggal-trigger">Pilih tanggal reservasi</button>
@@ -37,19 +37,19 @@
         <div id="tanggalGrid" class="tanggal-grid"></div>
       </div>
     </div>
-  </section>
 
-  <section class="section-paket">
-    <h3>Pilih Paket</h3>
+    <br />
 
-<div>
     <label>
       Jumlah Orang<br />
       <input type="number" id="jumlahOrang" min="1" placeholder="" />
     </label>
     <p class="jumlah-orang-note">*kami hanya menyiapkan kursi untuk jumlah orang yang dicantumkan.</p>
-</div>
-    <br />
+  </section>
+
+  <section class="section-paket">
+    <h3>Pilih Paket</h3>
+
 
     <div id="paketSkeleton" class="paket-skeleton-list" aria-hidden="true">
       <div class="paket-card paket-skeleton-card">

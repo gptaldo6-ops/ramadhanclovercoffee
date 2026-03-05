@@ -52,6 +52,25 @@ section {
   position: relative;
 }
 
+
+.section-data-pemesan-highlight {
+  z-index: 30;
+  border: 2px solid #ffd65a;
+  background: linear-gradient(180deg, rgba(255, 250, 224, 0.95) 0%, rgba(255, 255, 255, 0.96) 100%);
+  box-shadow: 0 10px 24px rgba(128, 86, 0, 0.12);
+}
+
+.section-highlight-note {
+  margin: -2px 0 12px;
+  font-size: 12px;
+  color: #7a5a00;
+  font-weight: 600;
+}
+
+.subsection-title {
+  margin-top: 6px;
+}
+
 .section-tanggal {
   z-index: 30;
 }
