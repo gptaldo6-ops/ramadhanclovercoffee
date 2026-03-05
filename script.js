@@ -621,7 +621,7 @@ function stopWaButtonLoading() {
   btnWA.classList.remove("loading");
   btnWA.removeAttribute("aria-disabled");
   btnWA.dataset.locked = "0";
-  btnWA.textContent = "Kirim Bukti via WhatsApp";
+  btnWA.textContent = "Kirim Pesanan";
 }
 
 function saveReservationBackup(payload) {
@@ -905,7 +905,7 @@ function showPaymentPopup({ nama, tanggal, total, addonTotal = 0 }) {
   btnWA.classList.remove("loading");
   btnWA.removeAttribute("aria-disabled");
   btnWA.dataset.locked = "0";
-  btnWA.textContent = "Kirim Bukti via WhatsApp";
+  btnWA.textContent = "Kirim Pesanan";
 
   paymentModal.classList.remove("hidden");
   paymentModal.classList.add("modal-opening");
