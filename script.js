@@ -64,7 +64,6 @@ const summaryContainer = document.getElementById("order-summary");
 const submitButton = document.getElementById("btnSubmit");
 const paymentModal = document.getElementById("paymentModal");
 const payTotal = document.getElementById("payTotal");
-const payAddonTotal = document.getElementById("payAddonTotal");
 const btnWA = document.getElementById("btnWA");
 const menuPreviewModal = document.getElementById("menuPreviewModal");
 const previewImage = document.getElementById("previewImage");
@@ -901,8 +900,9 @@ submitButton.addEventListener("click", () => {
   }
 
   const cotarQtyFields = buildCotarQtyFields(paket);
-  const totalHarga = paket.reduce((sum, item) => sum + item.harga * item.qty, 0);
+  const totalPaket = paket.reduce((sum, item) => sum + item.harga * item.qty, 0);
   const totalAddOn = addOn.reduce((sum, item) => sum + item.harga * item.qty, 0);
+  const totalHarga = totalPaket + totalAddOn;
   const reservationId = `RSV-${Date.now()}`;
 
   pendingPayload = {
@@ -916,6 +916,8 @@ submitButton.addEventListener("click", () => {
     add_on: addOn,
     total_harga: totalHarga,
     totalHarga,
+    paket_total_harga: totalPaket,
+    paketTotalHarga: totalPaket,
     addon_total_harga: totalAddOn,
     addonTotalHarga: totalAddOn,
     ...cotarQtyFields,
@@ -930,15 +932,12 @@ submitButton.addEventListener("click", () => {
     nama,
     tanggal,
     total: totalHarga,
-    addonTotal: totalAddOn,
   });
 });
 
-function showPaymentPopup({ nama, tanggal, total, addonTotal = 0 }) {
+function showPaymentPopup({ nama, tanggal, total }) {
   payTotal.textContent = formatRupiah(total);
-  if (payAddonTotal) {
-    payAddonTotal.textContent = formatRupiah(addonTotal);
-  }
+
 
   btnWA.href =
     "https://wa.me/6285121396083?text=" +
