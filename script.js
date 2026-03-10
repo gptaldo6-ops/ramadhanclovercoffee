@@ -113,7 +113,6 @@ const ADD_ON_ITEMS = [
   { name: "Dimsum Siomay Mercon", category: "Food", price: 20000 },
   { name: "Dimsum Siomay Kulit Tahu Ayam", category: "Food", price: 20000 },
   { name: "Banana Split", category: "Food", price: 20000 },
-  { name: "Waffle", category: "Food", price: 25000 },
   { name: "Cireng Bumbu Rujak", category: "Food", price: 20000 },
   { name: "Keju Aroma", category: "Food", price: 20000 },
   { name: "Matcha Cake", category: "Food", price: 25000 },
