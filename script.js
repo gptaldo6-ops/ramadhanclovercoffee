@@ -87,7 +87,7 @@ const btnFoodAgree = document.getElementById("btnFoodAgree");
 const btnFoodDecline = document.getElementById("btnFoodDecline");
 
 const ADD_ON_ITEMS = [
-  { name: "Matcha Latte Ice", category: "Drink", price: 23000 },
+  { name: "Matcha Latte Ice", category: "Drink", price: 23000, hide: true },
   { name: "Taro Latte Ice", category: "Drink", price: 20000 },
   { name: "Choco Dubai", category: "Drink", price: 25000 },
   { name: "Choco Milk Ice", category: "Drink", price: 20000 },
