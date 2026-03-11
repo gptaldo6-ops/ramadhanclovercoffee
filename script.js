@@ -86,6 +86,8 @@ const btnDrinkDecline = document.getElementById("btnDrinkDecline");
 const btnFoodAgree = document.getElementById("btnFoodAgree");
 const btnFoodDecline = document.getElementById("btnFoodDecline");
 
+const availableItems = ADD_ON_ITEMS.filter(item => !item.hide);
+
 const ADD_ON_ITEMS = [
   { name: "Matcha Latte Ice", category: "Drink", price: 23000, hide: true },
   { name: "Taro Latte Ice", category: "Drink", price: 20000 },
