@@ -166,6 +166,9 @@ const ADD_ON_ITEMS = [
   { name: "Cocotaro", category: "Drink", price: 23000 },
   { name: "Cloud Citrus", category: "Drink", price: 20000 },
   { name: "Waffle", category: "Food", price: 25000 },
+  { name: "Curry Katsu", category: "Food", price: 35000 },
+  { name: "Sapi Lada Hitam", category: "Food", price: 40000 },
+  { name: "Choco Almond", category: "Food", price: 25000 },
 ];
 
 function getAdminSettings() {
