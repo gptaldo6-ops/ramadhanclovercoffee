@@ -87,7 +87,7 @@ const btnFoodAgree = document.getElementById("btnFoodAgree");
 const btnFoodDecline = document.getElementById("btnFoodDecline");
 
 const ADD_ON_ITEMS = [
-  { name: "Matcha Latte Ice", category: "Drink", price: 23000, },
+  { name: "Matcha Latte Ice", category: "Drink", price: 23000 },
   { name: "Taro Latte Ice", category: "Drink", price: 20000 },
   { name: "Choco Dubai", category: "Drink", price: 25000 },
   { name: "Choco Milk Ice", category: "Drink", price: 20000 },
@@ -170,6 +170,10 @@ const ADD_ON_ITEMS = [
   { name: "Sapi Lada Hitam", category: "Food", price: 40000 },
   { name: "Choco Almond", category: "Food", price: 25000 },
 ];
+
+function isAddonVisible(item) {
+  return item.hide !== true;
+}
 
 function getAdminSettings() {
   try {
@@ -442,7 +446,7 @@ function renderAddOnMenu() {
   addonDrinkGrid.innerHTML = "";
   addonFoodGrid.innerHTML = "";
 
-  ADD_ON_ITEMS.forEach((item) => {
+  ADD_ON_ITEMS.filter(isAddonVisible).forEach((item) => {
     const card = createAddonCard(item);
     if (item.category === "Drink") {
       addonDrinkGrid.appendChild(card);
