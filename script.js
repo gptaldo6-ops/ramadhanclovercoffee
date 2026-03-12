@@ -238,6 +238,17 @@ function isDateClosedByAdmin(dateValue, adminSettings) {
   return adminSettings.siteClosed || adminSettings.closedDates.includes(dateValue);
 }
 
+function isDateClosedByDailyCutoff(dateValue) {
+  const now = new Date();
+  if (now.getHours() < 15) return false;
+
+  return dateValue === toDateString(now);
+}
+
+function isDateClosedForReservation(dateValue, adminSettings) {
+  return isDateClosedByAdmin(dateValue, adminSettings) || isDateClosedByDailyCutoff(dateValue);
+}
+
 function getMaxPeopleForDate(dateValue, adminSettings) {
   const rawValue = Number(adminSettings.maxPeopleByDate?.[dateValue]);
   if (!Number.isFinite(rawValue) || rawValue <= 0) return null;
@@ -271,11 +282,15 @@ function applyBookingDateRange() {
 
     const labelDay = formatDisplayDay(cursor);
     const labelDate = formatDisplayDate(cursor);
-    const closedByAdmin = isDateClosedByAdmin(value, adminSettings);
+    const closedByCutoff = isDateClosedByDailyCutoff(value);
+    const isClosed = isDateClosedForReservation(value, adminSettings);
 
-    if (closedByAdmin) {
+    if (isClosed) {
       button.classList.add("disabled");
       button.disabled = true;
+      button.title = closedByCutoff
+        ? "Reservasi untuk hari ini otomatis ditutup setelah jam 15:00"
+        : "Tanggal ini sudah penuh / ditutup";
     }
 
     button.innerHTML = `<span>${labelDay}</span><strong>${labelDate}</strong>`;
@@ -286,7 +301,7 @@ function applyBookingDateRange() {
     }
 
     button.addEventListener("click", () => {
-      if (closedByAdmin) return;
+      if (isClosed) return;
 
       tanggalInput.value = value;
       tanggalTrigger.textContent = `${labelDay}, ${labelDate}`;
@@ -766,7 +781,7 @@ function submitPendingPayloadToSheet() {
   pendingPayload = null;
 
   const latestSettings = getAdminSettings();
-  if (isDateClosedByAdmin(payloadToSubmit.tanggal, latestSettings)) {
+  if (isDateClosedForReservation(payloadToSubmit.tanggal, latestSettings)) {
     alert("Tanggal reservasi sudah ditutup admin. Silakan pilih tanggal lain.");
     closePayment();
     applyBookingDateRange();
@@ -884,7 +899,7 @@ submitButton.addEventListener("click", () => {
     return;
   }
 
-  if (isDateClosedByAdmin(tanggal, adminSettings)) {
+  if (isDateClosedForReservation(tanggal, adminSettings)) {
     alert("Tanggal yang dipilih sedang ditutup oleh admin");
     return;
   }
