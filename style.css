@@ -173,6 +173,35 @@ input {
   color: #e6f2ff;
 }
 
+.tanggal-item.disabled {
+  background: #ffeceb;
+  border-color: #f1b7b2;
+  color: #b9342b;
+  cursor: not-allowed;
+}
+
+.tanggal-item.disabled span {
+  color: #cc645c;
+}
+
+.tanggal-legend {
+  margin: 10px 2px 0;
+  font-size: 11px;
+  color: #8a3a33;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tanggal-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #de5d55;
+  border: 1px solid #c84f47;
+  flex: 0 0 auto;
+}
+
 #btnSubmit {
   width: 100%;
   padding: 16px;
