@@ -169,7 +169,7 @@ const ADD_ON_ITEMS = [
   { name: "Curry Katsu", category: "Food", price: 35000 },
   { name: "Sapi Lada Hitam", category: "Food", price: 40000 },
   { name: "Choco Almond", category: "Food", price: 25000 },
-  { name: "Chicken Strips", category: "Food", price: 26000 },
+  { name: "Moccaclo", category: "Food", price: 23000 },
 ];
 
 function isAddonVisible(item) {
